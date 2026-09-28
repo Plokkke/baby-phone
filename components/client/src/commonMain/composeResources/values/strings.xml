@@ -64,4 +64,7 @@
     <string name="sound_unmute">Activer le son</string>
     <string name="sound_raise">Monter le volume</string>
     <string name="sound_test">Tester le son</string>
+
+    <string name="mic_no_signal">Le micro ne démarre pas : vérifiez l'autorisation du micro</string>
+    <string name="mic_silent">Le micro ne capte aucun son : vérifiez l'autorisation micro du système et le micro sélectionné</string>
 </resources>

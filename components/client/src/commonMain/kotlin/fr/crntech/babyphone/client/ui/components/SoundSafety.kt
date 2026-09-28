@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DoNotDisturbOff
 import androidx.compose.material.icons.filled.DoNotDisturbOn
+import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -27,6 +28,8 @@ import androidx.compose.ui.unit.dp
 import fr.crntech.babyphone.client.platform.QuietState
 import fr.crntech.babyphone.client.platform.SoundOutputState
 import fr.crntech.babyphone.client.resources.Res
+import fr.crntech.babyphone.client.resources.mic_no_signal
+import fr.crntech.babyphone.client.resources.mic_silent
 import fr.crntech.babyphone.client.resources.quiet_grant
 import fr.crntech.babyphone.client.resources.quiet_off
 import fr.crntech.babyphone.client.resources.quiet_on
@@ -39,7 +42,27 @@ import fr.crntech.babyphone.client.resources.sound_too_quiet
 import fr.crntech.babyphone.client.resources.sound_unknown_volume
 import fr.crntech.babyphone.client.resources.sound_unmute
 import fr.crntech.babyphone.client.ui.Palette
+import fr.crntech.babyphone.shared.MicrophoneHealth
 import org.jetbrains.compose.resources.stringResource
+
+/** Local microphone level, and why nothing is captured when that happens. */
+@Composable
+fun MicrophoneCheck(status: MicrophoneHealth.Status, levelDb: Float, thresholdDb: Float?, modifier: Modifier = Modifier) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LevelMeter(levelDb, thresholdDb)
+        val warning = when (status) {
+            MicrophoneHealth.Status.NO_SIGNAL -> Res.string.mic_no_signal
+            MicrophoneHealth.Status.SILENT -> Res.string.mic_silent
+            else -> null
+        }
+        if (warning != null) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Filled.MicOff, contentDescription = null, tint = Palette.alarm, modifier = Modifier.size(18.dp))
+                Text(stringResource(warning), color = Palette.alarm, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
+}
 
 /** Emitter-side do-not-disturb switch; asks for the system access first when the app lacks it. */
 @Composable

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
@@ -17,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -33,6 +35,7 @@ import fr.crntech.babyphone.client.monitor.EmitterSession
 import fr.crntech.babyphone.client.platform.LocalPlatformUi
 import fr.crntech.babyphone.shared.Role
 import fr.crntech.babyphone.client.ui.Palette
+import fr.crntech.babyphone.client.ui.components.MicrophoneCheck
 import fr.crntech.babyphone.client.ui.components.QuietToggle
 import fr.crntech.babyphone.client.ui.components.RoleIcon
 
@@ -59,6 +62,7 @@ fun EmitterScreen(session: EmitterSession, onStop: () -> Unit) {
         if (state.transmitting) Text(stringResource(Res.string.emitter_transmitting), color = Palette.sound.copy(alpha = 0.5f))
         if (state.parentTalking) Text(stringResource(Res.string.emitter_parent_talking), color = Palette.moon.copy(alpha = 0.6f))
         QuietToggle(quiet, session::setQuiet, dim)
+        MicrophoneCheck(state.microphone, state.levelDb, state.thresholdDb, Modifier.fillMaxWidth(0.7f).alpha(0.5f))
         Box(Modifier.weight(1f))
         HoldToStop(onStop)
     }

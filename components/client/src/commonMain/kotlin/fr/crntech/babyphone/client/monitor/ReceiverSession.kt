@@ -7,6 +7,7 @@ import fr.crntech.babyphone.client.platform.Microphone
 import fr.crntech.babyphone.client.platform.SoundOutput
 import fr.crntech.babyphone.client.platform.Speaker
 import fr.crntech.babyphone.shared.Loudness
+import fr.crntech.babyphone.shared.MicrophoneHealth
 import fr.crntech.babyphone.shared.PeerMessage
 import fr.crntech.babyphone.shared.Threshold
 import fr.crntech.babyphone.shared.Timing
@@ -44,6 +45,8 @@ class ReceiverSession(
         val emitterQuiet: Boolean? = null,
         val listening: Boolean = false,
         val talkingSince: TimeMark? = null,
+        val talkLevelDb: Float = Loudness.FLOOR_DB,
+        val talkMicrophone: MicrophoneHealth.Status = MicrophoneHealth.Status.STARTING,
         val linkLost: Boolean = false,
         val alarmSilenced: Boolean = false,
     )
@@ -59,6 +62,8 @@ class ReceiverSession(
     private val listening = MutableStateFlow(false)
     private val talking = MutableStateFlow(false)
     private val outgoing = Channel<PeerMessage>(Channel.UNLIMITED)
+
+    @Volatile private var talkHealth: MicrophoneHealth? = null
 
     /** Armed once the emitter has been heard, so starting the receiver first does not ring. */
     @Volatile private var lastStatus: TimeMark? = null
@@ -127,12 +132,24 @@ class ReceiverSession(
     }
 
     private suspend fun talk(): Nothing = talking.collectLatest { on ->
-        _state.update { it.copy(talkingSince = if (on) TimeSource.Monotonic.markNow() else null) }
+        _state.update {
+            it.copy(
+                talkingSince = if (on) TimeSource.Monotonic.markNow() else null,
+                talkLevelDb = Loudness.FLOOR_DB,
+                talkMicrophone = MicrophoneHealth.Status.STARTING,
+            )
+        }
+        talkHealth = if (on) MicrophoneHealth() else null
         if (!on) return@collectLatest
         withTimeoutOrNull(Timing.TALKBACK_MAX) {
             microphone.frames(MicMode.VOICE)
                 .catch { println("$TAG: talk-back microphone failed: ${it.message}") }
-                .collect { link.send(PeerMessage.Audio(it)) }
+                .collect { frame ->
+                    val level = Loudness.dbfs(frame)
+                    talkHealth?.onFrame(level)
+                    _state.update { it.copy(talkLevelDb = level) }
+                    link.send(PeerMessage.Audio(frame))
+                }
         }
         talking.value = false
     }
@@ -142,7 +159,10 @@ class ReceiverSession(
             delay(WATCHDOG_TICK)
             val lost = lastStatus?.let { it.elapsedNow() > Timing.EMITTER_SILENCE_ALARM } ?: false
             val silenced = lost && _state.value.alarmSilenced
-            _state.update { it.copy(emitterOnline = lastStatus != null && !lost, linkLost = lost, alarmSilenced = silenced) }
+            val talkMicrophone = talkHealth?.status() ?: MicrophoneHealth.Status.STARTING
+            _state.update {
+                it.copy(emitterOnline = lastStatus != null && !lost, linkLost = lost, alarmSilenced = silenced, talkMicrophone = talkMicrophone)
+            }
             when {
                 !lost -> alarm.clear()
                 !silenced -> alarm.raise()
