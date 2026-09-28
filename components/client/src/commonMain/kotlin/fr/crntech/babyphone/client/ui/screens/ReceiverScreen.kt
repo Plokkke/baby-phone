@@ -68,7 +68,9 @@ import fr.crntech.babyphone.shared.Role
 import fr.crntech.babyphone.shared.Threshold
 import fr.crntech.babyphone.shared.Timing
 import fr.crntech.babyphone.client.ui.Palette
+import fr.crntech.babyphone.client.ui.components.EmitterQuietWarning
 import fr.crntech.babyphone.client.ui.components.LevelMeter
+import fr.crntech.babyphone.client.ui.components.SoundCheck
 import fr.crntech.babyphone.client.ui.components.RoleIcon
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
@@ -100,7 +102,10 @@ fun ReceiverScreen(session: ReceiverSession, onStop: () -> Unit) {
 
 @Composable
 private fun MonitorPanel(state: ReceiverSession.State, session: ReceiverSession, onStop: () -> Unit) {
+    val sound by session.sound.collectAsStateWithLifecycle()
     StatusRow(state)
+    EmitterQuietWarning(state.emitterQuiet)
+    SoundCheck(sound, session::makeAudible, session::playTestSound)
     Text(
         stringResource(if (state.transmitting) Res.string.receiver_sound_detected else Res.string.receiver_quiet),
         style = MaterialTheme.typography.headlineMedium,

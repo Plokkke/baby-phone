@@ -51,4 +51,17 @@
     <string name="alarm_title">Liaison perdue avec le bébé</string>
     <string name="alarm_text">Vérifiez l'appareil du bébé et la connexion.</string>
     <string name="alarm_silence">Couper le son</string>
+
+    <string name="quiet_on">Ne pas déranger activé</string>
+    <string name="quiet_off">Ne pas déranger désactivé</string>
+    <string name="quiet_grant">Autoriser la gestion de Ne pas déranger</string>
+    <string name="receiver_emitter_not_quiet">Ne pas déranger inactif chez le bébé</string>
+
+    <string name="sound_muted">Le son est coupé sur cet appareil</string>
+    <string name="sound_too_quiet">Volume trop bas (%1$d %)</string>
+    <string name="sound_alerts_blocked">Notifications désactivées : l'alerte de perte de connexion peut passer inaperçue</string>
+    <string name="sound_unknown_volume">Vérifiez que le son de l'ordinateur est activé</string>
+    <string name="sound_unmute">Activer le son</string>
+    <string name="sound_raise">Monter le volume</string>
+    <string name="sound_test">Tester le son</string>
 </resources>

@@ -33,6 +33,7 @@ import fr.crntech.babyphone.client.monitor.EmitterSession
 import fr.crntech.babyphone.client.platform.LocalPlatformUi
 import fr.crntech.babyphone.shared.Role
 import fr.crntech.babyphone.client.ui.Palette
+import fr.crntech.babyphone.client.ui.components.QuietToggle
 import fr.crntech.babyphone.client.ui.components.RoleIcon
 
 private val dim = Color(0xFF3A3F4B)
@@ -41,6 +42,7 @@ private val dim = Color(0xFF3A3F4B)
 @Composable
 fun EmitterScreen(session: EmitterSession, onStop: () -> Unit) {
     val state by session.state.collectAsStateWithLifecycle()
+    val quiet by session.quiet.collectAsStateWithLifecycle()
     LocalPlatformUi.current.NightScreen()
     Column(
         Modifier.fillMaxSize().background(Color.Black).safeDrawingPadding().padding(32.dp),
@@ -56,6 +58,7 @@ fun EmitterScreen(session: EmitterSession, onStop: () -> Unit) {
         )
         if (state.transmitting) Text(stringResource(Res.string.emitter_transmitting), color = Palette.sound.copy(alpha = 0.5f))
         if (state.parentTalking) Text(stringResource(Res.string.emitter_parent_talking), color = Palette.moon.copy(alpha = 0.6f))
+        QuietToggle(quiet, session::setQuiet, dim)
         Box(Modifier.weight(1f))
         HoldToStop(onStop)
     }

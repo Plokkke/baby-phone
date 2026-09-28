@@ -5,6 +5,7 @@ import fr.crntech.babyphone.client.net.PeerLink
 import fr.crntech.babyphone.client.platform.Battery
 import fr.crntech.babyphone.client.platform.MicMode
 import fr.crntech.babyphone.client.platform.Microphone
+import fr.crntech.babyphone.client.platform.QuietMode
 import fr.crntech.babyphone.client.platform.Speaker
 import fr.crntech.babyphone.shared.Loudness
 import fr.crntech.babyphone.shared.PeerMessage
@@ -29,6 +30,7 @@ class EmitterSession(
     private val microphone: Microphone,
     private val speaker: () -> Speaker,
     private val battery: Battery,
+    private val quietMode: QuietMode,
     thresholdDb: Float,
 ) : MonitorSession {
 
@@ -43,13 +45,27 @@ class EmitterSession(
 
     private val _state = MutableStateFlow(State(thresholdDb = thresholdDb))
     val state = _state.asStateFlow()
+    val quiet = quietMode.state
+
+    fun setQuiet(enabled: Boolean) = quietMode.setEnabled(enabled)
 
     private val clock = TimeSource.Monotonic
     @Volatile private var forcedUntil = clock.markNow()
     @Volatile private var talkbackUntil = clock.markNow()
     @Volatile private var peakDb = Loudness.FLOOR_DB
 
-    override suspend fun run() = coroutineScope {
+    /** Silences the phone for the night, and gives it back as it was found. */
+    override suspend fun run() {
+        val silencedHere = quietMode.state.value.let { it.controllable && !it.enabled }
+        if (silencedHere) quietMode.setEnabled(true)
+        try {
+            monitor()
+        } finally {
+            if (silencedHere) quietMode.setEnabled(false)
+        }
+    }
+
+    private suspend fun monitor(): Unit = coroutineScope {
         launch { link.run() }
         launch { link.connected.collect { c -> _state.update { it.copy(connected = c) } } }
         launch { link.presence.collect { peers -> _state.update { s -> s.copy(receivers = peers.count { it.role == Role.RECEIVER }) } } }
@@ -95,7 +111,8 @@ class EmitterSession(
             val level = peakDb.also { peakDb = Loudness.FLOOR_DB }
             val current = _state.updateAndGet { it.copy(levelDb = level, parentTalking = talkbackUntil.hasNotPassedNow()) }
             val power = battery.read()
-            link.send(PeerMessage.EmitterStatus(power.percent, power.charging, level, current.thresholdDb, current.transmitting))
+            val quiet = quietMode.state.value.takeIf { it.supported }?.enabled
+            link.send(PeerMessage.EmitterStatus(power.percent, power.charging, level, current.thresholdDb, current.transmitting, quiet))
         }
     }
 

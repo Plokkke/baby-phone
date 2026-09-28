@@ -4,6 +4,7 @@ import fr.crntech.babyphone.client.net.PeerLink
 import fr.crntech.babyphone.client.platform.Alarm
 import fr.crntech.babyphone.client.platform.MicMode
 import fr.crntech.babyphone.client.platform.Microphone
+import fr.crntech.babyphone.client.platform.SoundOutput
 import fr.crntech.babyphone.client.platform.Speaker
 import fr.crntech.babyphone.shared.Loudness
 import fr.crntech.babyphone.shared.PeerMessage
@@ -29,6 +30,7 @@ class ReceiverSession(
     private val microphone: Microphone,
     private val speaker: () -> Speaker,
     private val alarm: Alarm,
+    private val soundOutput: SoundOutput,
 ) : MonitorSession {
 
     data class State(
@@ -39,6 +41,7 @@ class ReceiverSession(
         val levelDb: Float = Loudness.FLOOR_DB,
         val thresholdDb: Float = Threshold.DEFAULT_DB,
         val transmitting: Boolean = false,
+        val emitterQuiet: Boolean? = null,
         val listening: Boolean = false,
         val talkingSince: TimeMark? = null,
         val linkLost: Boolean = false,
@@ -47,6 +50,11 @@ class ReceiverSession(
 
     private val _state = MutableStateFlow(State())
     val state = _state.asStateFlow()
+    val sound = soundOutput.state
+
+    fun makeAudible() = soundOutput.makeAudible()
+
+    fun playTestSound() = soundOutput.playTestSound()
 
     private val listening = MutableStateFlow(false)
     private val talking = MutableStateFlow(false)
@@ -74,6 +82,7 @@ class ReceiverSession(
     }
 
     override suspend fun run() = coroutineScope {
+        if (soundOutput.state.value.tooQuiet) soundOutput.makeAudible()
         launch { link.run() }
         launch { link.connected.collect { c -> _state.update { it.copy(connected = c) } } }
         launch { for (message in outgoing) link.send(message) }
@@ -99,6 +108,7 @@ class ReceiverSession(
                             levelDb = message.levelDb,
                             thresholdDb = message.thresholdDb,
                             transmitting = message.transmitting,
+                            emitterQuiet = message.quiet,
                         )
                     }
                 }
