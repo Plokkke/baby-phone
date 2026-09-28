@@ -15,12 +15,14 @@ Squash-merge PRs: the PR title becomes the commit semantic-release analyses.
 
 ## One-time Raspberry Pi setup
 
-1. **Terraform state** (Postgres, loopback only):
+1. **Terraform state backend** in `/srv/docker/tf-backend` (Postgres, loopback only, shared by all Terraform projects):
    ```bash
-   cd infrastructure/bootstrap
-   openssl rand -hex 24 > tf-state-password   # git-ignored
+   mkdir -p /srv/docker/tf-backend && cd /srv/docker/tf-backend
+   curl -fsSLO https://raw.githubusercontent.com/Plokkke/baby-phone/main/infrastructure/bootstrap/docker-compose.yml
+   openssl rand -hex 24 > tf-state-password && chmod 600 tf-state-password
    docker compose up -d
    ```
+   Back it up with the rest of `/srv/docker`: losing it means Terraform forgets what it manages.
 2. **GitHub runner** (Settings → Actions → Runners → New self-hosted runner → Linux ARM64), then:
    ```bash
    ./config.sh --url https://github.com/Plokkke/baby-phone --token <token> --labels rpi --unattended

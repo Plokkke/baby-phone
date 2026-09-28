@@ -1,8 +1,14 @@
-# Out-of-band services Terraform depends on, so they cannot be managed by Terraform itself.
-# Run once on the Raspberry Pi: openssl rand -hex 24 > tf-state-password && docker compose up -d
+# Terraform state backend, shared by every Terraform project on the Raspberry Pi
+# (each stack isolates itself with its own `schema_name`). It lives outside Terraform
+# because Terraform cannot manage the database holding its own state.
+#
+# Deployed by hand in /srv/docker/tf-backend:
+#   openssl rand -hex 24 > tf-state-password && chmod 600 tf-state-password
+#   docker compose up -d
 services:
-  terraform-state:
+  postgres:
     image: postgres:18-alpine
+    container_name: tf-backend
     environment:
       POSTGRES_DB: terraform
       POSTGRES_USER: terraform
@@ -12,12 +18,14 @@ services:
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
-      - terraform-state:/var/lib/postgresql
+      - ./volumes/postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "terraform", "-d", "terraform"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
 
 secrets:
   tf-state-password:
     file: ./tf-state-password
-
-volumes:
-  terraform-state:
