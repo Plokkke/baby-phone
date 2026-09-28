@@ -9,6 +9,7 @@ import io.ktor.server.routing.get
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
@@ -17,7 +18,9 @@ fun Route.webRoutes(config: ServerConfig) {
     val assetLinks = assetLinks(config)
     val pairPage = resourceText("pair.html")
 
-    get(Endpoints.HEALTH_PATH) { call.respondText("ok") }
+    val health = buildJsonObject { put("status", "ok"); put("version", config.version) }.toString()
+
+    get(Endpoints.HEALTH_PATH) { call.respondText(health, ContentType.Application.Json) }
     get("/.well-known/assetlinks.json") { call.respondText(assetLinks, ContentType.Application.Json) }
     get(PairingLink.PATH) { call.respondText(pairPage, ContentType.Text.Html) }
 }

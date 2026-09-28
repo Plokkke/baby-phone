@@ -1,6 +1,0 @@
-**/build
-**/.gradle
-.kotlin
-.idea
-local.properties
-components/android
