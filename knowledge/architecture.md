@@ -9,6 +9,23 @@
       └──────── talk-back audio, SetThreshold, ForceListen ◀──────────────────┘
 ```
 
+## Modules
+
+```
+shared (KMP: jvm, wasmJs) ◀── server (JVM)
+   ▲
+client (KMP: android, wasmJs)   commonMain only: no expect/actual
+   ▲
+android (app shell)             implements client.platform.* (mic, speaker, battery, alarm, storage, UI hooks)
+```
+Everything a device does (sessions, transport, settings, screens) lives once in `client`.
+A platform only provides a `Platform` (hardware + storage + HTTP client), a `PlatformUi`
+(scanner, permissions, night screen) and a `MonitorController` (foreground service on Android).
+
+Crypto goes through `cryptography-kotlin` (JDK provider on JVM/Android, Web Crypto in browsers),
+hence the suspending `PeerCodec` / `PairingSecret.roomId()`. The frame format is unchanged
+(`nonce(12) || ciphertext+tag`) and a reference vector pins the room id derivation.
+
 ## Pairing & security
 - QR = `https://<host>/pair#s=<32-byte secret>`. The secret sits in the URL **fragment**:
   a browser opening the link never sends it to the server.

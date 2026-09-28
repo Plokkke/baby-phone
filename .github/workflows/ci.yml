@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-jvm
       - name: Test, lint and build
-        run: ./gradlew :shared:test :server:test :android:lintDebug :android:assembleDebug :android:assembleRelease :server:buildFatJar
+        run: ./gradlew :shared:allTests :server:test :client:compileKotlinWasmJs :android:lintDebug :android:assembleDebug :android:assembleRelease :server:buildFatJar
       - name: Docker image builds
         uses: docker/build-push-action@v7
         with:

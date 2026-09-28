@@ -70,21 +70,10 @@ play {
 }
 
 dependencies {
-    implementation(project(":shared"))
+    implementation(project(":client"))
     implementation(libs.coroutines.android)
     implementation(libs.ktor.client.okhttp)
-    implementation(libs.ktor.client.websockets)
-
-    implementation(platform(libs.compose.bom))
-    implementation(libs.compose.material3)
-    implementation(libs.compose.icons.extended)
-    implementation(libs.compose.ui.tooling.preview)
-    debugImplementation(libs.compose.ui.tooling)
     implementation(libs.activity.compose)
-    implementation(libs.lifecycle.viewmodel.compose)
-    implementation(libs.lifecycle.runtime.compose)
     implementation(libs.core.ktx)
-    implementation(libs.datastore.preferences)
-    implementation(libs.zxing.core)
     implementation(libs.code.scanner)
 }

@@ -14,8 +14,8 @@ import android.widget.Toast
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import fr.crntech.babyphone.R
+import fr.crntech.babyphone.client.monitor.MonitorSession
 import fr.crntech.babyphone.container
-import fr.crntech.babyphone.device.Battery
 import fr.crntech.babyphone.shared.Role
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -63,7 +63,7 @@ class MonitorService : Service() {
     }
 
     private suspend fun runSession(role: Role) {
-        val session = createSession(role)
+        val session = container.createSession(role)
         MonitorHub.publish(session)
         try {
             session.run()
@@ -75,16 +75,6 @@ class MonitorService : Service() {
                 Toast.makeText(this@MonitorService, R.string.monitor_failed, Toast.LENGTH_LONG).show()
                 stopSelf()
             }
-        }
-    }
-
-    private suspend fun createSession(role: Role): MonitorSession {
-        val settings = container.settings.current()
-        val link = container.peerLink(settings.secret, settings.deviceId, role)
-        return when (role) {
-            Role.EMITTER -> EmitterSession(link, container.settings, Battery(this), settings.thresholdDb)
-            Role.RECEIVER -> ReceiverSession(link, Alarm(this))
-            Role.IDLE -> error("Idle devices do not monitor")
         }
     }
 
