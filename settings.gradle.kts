@@ -35,7 +35,7 @@ fun RepositoryHandler.distribution(url: String, pattern: String, group: String) 
 }
 
 // `-PskipAndroid` lets the server build without an Android SDK (Docker image).
-val androidModules = if (providers.gradleProperty("skipAndroid").isPresent) emptyList() else listOf("client", "android")
+val androidModules = if (providers.gradleProperty("skipAndroid").isPresent) emptyList() else listOf("client", "android", "web")
 
 (listOf("shared", "server") + androidModules).forEach { name ->
     include(":$name")

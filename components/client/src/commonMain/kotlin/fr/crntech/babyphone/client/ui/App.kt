@@ -2,7 +2,9 @@ package fr.crntech.babyphone.client.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -11,7 +13,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.crntech.babyphone.client.monitor.EmitterSession
 import fr.crntech.babyphone.client.monitor.ReceiverSession
@@ -35,7 +39,10 @@ fun App(viewModel: AppViewModel, platformUi: PlatformUi) = CompositionLocalProvi
             viewModel.notices.collect { snackbar.showSnackbar(getString(it.message())) }
         }
         Scaffold(snackbarHost = { SnackbarHost(snackbar) }, contentWindowInsets = WindowInsets(0)) { _ ->
-            Box(Modifier.fillMaxSize()) { Screens(viewModel, platformUi) }
+            // Phone-shaped column, so wide screens (web) keep the same layout.
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Box(Modifier.widthIn(max = MAX_CONTENT_WIDTH).fillMaxHeight()) { Screens(viewModel, platformUi) }
+            }
         }
     }
 }
@@ -55,6 +62,8 @@ private fun Screens(viewModel: AppViewModel, platformUi: PlatformUi) {
         }
     }
 }
+
+private val MAX_CONTENT_WIDTH = 480.dp
 
 private fun Notice.message() = when (this) {
     Notice.INVALID_PAIRING_LINK -> Res.string.pairing_invalid

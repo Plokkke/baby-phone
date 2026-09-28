@@ -4,7 +4,9 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.ktor.server.plugins.cachingheaders.CachingHeaders
 import io.ktor.server.plugins.calllogging.CallLogging
+import io.ktor.server.plugins.compression.Compression
 import io.ktor.server.routing.routing
 import io.ktor.server.websocket.WebSockets
 import io.ktor.server.websocket.pingPeriod
@@ -18,6 +20,8 @@ fun main() {
 
 fun Application.module(config: ServerConfig = ServerConfig.fromEnv()) {
     install(CallLogging)
+    install(Compression)
+    install(CachingHeaders)
     install(WebSockets) {
         pingPeriod = 5.seconds
         timeout = 15.seconds

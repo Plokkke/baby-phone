@@ -21,6 +21,7 @@ resource "docker_container" "server" {
     "APP_VERSION=${var.image_tag}",
     "ANDROID_PACKAGE=${var.android_package}",
     "ANDROID_CERT_SHA256=${join(",", var.android_cert_fingerprints)}",
+    "PLAY_STORE_URL=${var.play_store_url}",
   ]
 
   ports {

@@ -7,7 +7,8 @@ components/
 ├── shared/    Kotlin Multiplatform (JVM + Wasm): protocol, pairing, E2E crypto, sound gate
 ├── server/    Ktor WebSocket relay — forwards encrypted frames in memory, stores nothing
 ├── client/    Kotlin Multiplatform (Android + Wasm): sessions, transport, settings, Compose UI
-└── android/   Android shell: activity, foreground service, audio/battery/alarm implementations
+├── android/   Android shell: activity, foreground service, audio/battery/alarm implementations
+└── web/       Browser shell (Wasm), bundled in the server jar and served under /web
 infrastructure/ Dockerfile, Terraform (RPi deploy, Play), bootstrap state DB, nginx site
 knowledge/      Architecture & design decisions
 ```
@@ -18,7 +19,7 @@ knowledge/      Architecture & design decisions
 ./gradlew :shared:allTests :server:test    # unit (JVM + Wasm) + WebSocket integration tests
 ./gradlew :android:assembleDebug           # needs an Android SDK (local.properties → sdk.dir)
 ./gradlew :android:installDebug            # on a USB-connected phone
-./gradlew :server:run                      # local server on :8080
+./gradlew :server:run                      # local server on :8080, web client on /web/
 ```
 
 The public URL lives in one place: `babyphone.publicUrl` in `gradle.properties`.
