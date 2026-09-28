@@ -18,6 +18,7 @@ import io.ktor.websocket.Frame
 import io.ktor.websocket.readBytes
 import io.ktor.websocket.readText
 import io.ktor.websocket.send
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.test.Test
@@ -27,7 +28,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class RoomSocketTest {
-    private val room = PairingSecret.generate().roomId
+    private val room = runBlocking { PairingSecret.generate().roomId() }
     private val config = ServerConfig(version = "1.2.3", androidCertFingerprints = listOf("AA:BB"))
 
     private fun serverTest(block: suspend ApplicationTestBuilder.(HttpClient) -> Unit) = testApplication {
@@ -78,7 +79,7 @@ class RoomSocketTest {
     @Test
     fun `rooms are isolated`() = serverTest { client ->
         val emitter = client.join("baby", Role.EMITTER)
-        val stranger = client.join("x", Role.RECEIVER, PairingSecret.generate().roomId)
+        val stranger = client.join("x", Role.RECEIVER, PairingSecret.generate().roomId())
         emitter.send(byteArrayOf(1))
         assertNull(stranger.nextBinary())
     }

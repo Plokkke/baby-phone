@@ -1,9 +1,10 @@
 package fr.crntech.babyphone
 
 import android.app.Application
+import android.content.Context
+import fr.crntech.babyphone.client.AppContainer
 import fr.crntech.babyphone.monitor.Notifications
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
+import fr.crntech.babyphone.platform.androidPlatform
 
 class BabyPhoneApp : Application() {
     lateinit var container: AppContainer
@@ -11,8 +12,9 @@ class BabyPhoneApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        container = AppContainer(this)
+        container = AppContainer(androidPlatform(this))
         Notifications.createChannels(this)
-        MainScope().launch { container.settings.initialize() }
     }
 }
+
+val Context.container get() = (applicationContext as BabyPhoneApp).container

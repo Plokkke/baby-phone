@@ -1,23 +1,32 @@
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
-
 kotlin {
-    compilerOptions { jvmTarget = JvmTarget.JVM_17 }
-}
+    jvm {
+        compilerOptions { jvmTarget = JvmTarget.JVM_17 }
+    }
 
-dependencies {
-    api(libs.serialization.json)
-    api(libs.serialization.cbor)
-    testImplementation(libs.kotlin.test)
-}
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        // Library only: Node is enough to run the tests; browser apps consume the same klib.
+        nodejs()
+    }
 
-tasks.test { useJUnitPlatform() }
+    sourceSets {
+        commonMain.dependencies {
+            api(libs.serialization.json)
+            api(libs.serialization.cbor)
+            implementation(libs.cryptography.core)
+            implementation(libs.cryptography.provider.optimal)
+        }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.coroutines.test)
+        }
+    }
+}

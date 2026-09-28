@@ -4,9 +4,10 @@ Android baby monitor + Kotlin relay server, in one Gradle monorepo.
 
 ```
 components/
-├── shared/    Pure Kotlin/JVM: protocol, pairing, E2E crypto, sound gate (used by both sides)
+├── shared/    Kotlin Multiplatform (JVM + Wasm): protocol, pairing, E2E crypto, sound gate
 ├── server/    Ktor WebSocket relay — forwards encrypted frames in memory, stores nothing
-└── android/   Jetpack Compose app (emitter + receiver in the same APK)
+├── client/    Kotlin Multiplatform (Android + Wasm): sessions, transport, settings, Compose UI
+└── android/   Android shell: activity, foreground service, audio/battery/alarm implementations
 infrastructure/ Dockerfile, Terraform (RPi deploy, Play), bootstrap state DB, nginx site
 knowledge/      Architecture & design decisions
 ```
@@ -14,7 +15,7 @@ knowledge/      Architecture & design decisions
 ## Build & test
 
 ```bash
-./gradlew :shared:test :server:test        # unit + WebSocket integration tests
+./gradlew :shared:allTests :server:test    # unit (JVM + Wasm) + WebSocket integration tests
 ./gradlew :android:assembleDebug           # needs an Android SDK (local.properties → sdk.dir)
 ./gradlew :android:installDebug            # on a USB-connected phone
 ./gradlew :server:run                      # local server on :8080
