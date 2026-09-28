@@ -1,0 +1,16 @@
+name: Setup JVM toolchain
+description: JDK 21, Gradle cache and optionally the Android SDK
+inputs:
+  android:
+    description: Install the Android SDK
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: "21"
+    - if: inputs.android == 'true'
+      uses: android-actions/setup-android@v4
+    - uses: gradle/actions/setup-gradle@v6

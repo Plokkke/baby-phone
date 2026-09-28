@@ -1,0 +1,55 @@
+# Reusable validation, called by the PR and release workflows. Runs on GitHub-hosted runners only.
+name: CI
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  TERRAFORM_VERSION: "1.16.4"
+
+jobs:
+  gradle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-jvm
+      - name: Test, lint and build
+        run: ./gradlew :shared:test :server:test :android:lintDebug :android:assembleDebug :android:assembleRelease :server:buildFatJar
+      - name: Docker image builds
+        uses: docker/build-push-action@v7
+        with:
+          context: components/server/build/libs
+          file: infrastructure/docker/Dockerfile
+          push: false
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: reports
+          path: components/*/build/reports/
+
+  workflows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: actionlint
+        run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:latest -color
+
+  terraform:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        stack: [server, play]
+    defaults:
+      run:
+        working-directory: infrastructure/terraform/${{ matrix.stack }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+      - run: terraform fmt -check -recursive
+      - run: terraform init -backend=false -input=false
+      - run: terraform validate

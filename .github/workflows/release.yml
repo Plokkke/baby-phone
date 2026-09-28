@@ -1,0 +1,125 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/plokkke/baby-phone-server
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      published: ${{ steps.semver.outputs.new_release_published }}
+      version: ${{ steps.semver.outputs.new_release_version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: semver
+        uses: cycjimmy/semantic-release-action@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  image:
+    needs: release
+    if: needs.release.outputs.published == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-jvm
+        with:
+          android: "false"
+      - run: ./gradlew :server:buildFatJar -PskipAndroid -Pbabyphone.version=${{ needs.release.outputs.version }}
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v7
+        with:
+          context: components/server/build/libs
+          file: infrastructure/docker/Dockerfile
+          platforms: linux/arm64,linux/amd64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ needs.release.outputs.version }}
+            ${{ env.IMAGE }}:latest
+
+  deploy:
+    needs: [release, image]
+    # Self-hosted runner on the Raspberry Pi: only ever reached from main, never from PRs.
+    runs-on: [self-hosted, rpi]
+    environment:
+      name: production
+      url: https://babyphone.crn-tech.fr/health
+    permissions:
+      contents: read
+      packages: read
+    defaults:
+      run:
+        working-directory: infrastructure/terraform/server
+    env:
+      PG_CONN_STR: ${{ secrets.TF_STATE_PG_CONN_STR }}
+      TF_IN_AUTOMATION: "true"
+      TF_VAR_image_tag: ${{ needs.release.outputs.version }}
+      TF_VAR_registry_username: ${{ github.actor }}
+      TF_VAR_registry_password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "1.16.4"
+          terraform_wrapper: false
+      - run: terraform init -input=false
+      - run: terraform apply -input=false -auto-approve -var "image_repository=$IMAGE"
+      - name: Smoke test
+        run: |
+          curl -fsS --retry 10 --retry-delay 2 --retry-all-errors "$(terraform output -raw health_url)" \
+            | grep -F '"version":"${{ needs.release.outputs.version }}"'
+
+  play:
+    needs: release
+    # Flipped on by infrastructure/terraform/play once the Play Console app exists.
+    if: needs.release.outputs.published == 'true' && vars.PLAY_PUBLISH == 'true'
+    runs-on: ubuntu-latest
+    environment: google-play
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-jvm
+      - name: Restore signing key and Play credentials
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          echo "$PLAY_JSON" > "$RUNNER_TEMP/play.json"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
+          echo "PLAY_CREDENTIALS_PATH=$RUNNER_TEMP/play.json" >> "$GITHUB_ENV"
+      - name: Upload to the internal track
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew :android:publishReleaseBundle -Pbabyphone.version=${{ needs.release.outputs.version }}

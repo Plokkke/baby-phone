@@ -7,7 +7,7 @@ components/
 ├── shared/    Pure Kotlin/JVM: protocol, pairing, E2E crypto, sound gate (used by both sides)
 ├── server/    Ktor WebSocket relay — forwards encrypted frames in memory, stores nothing
 └── android/   Jetpack Compose app (emitter + receiver in the same APK)
-infrastructure/ Dockerfile, docker-compose (server + Caddy for HTTPS)
+infrastructure/ Dockerfile, Terraform (RPi deploy, Play), bootstrap state DB, nginx site
 knowledge/      Architecture & design decisions
 ```
 
@@ -23,19 +23,11 @@ knowledge/      Architecture & design decisions
 The public URL lives in one place: `babyphone.publicUrl` in `gradle.properties`.
 It feeds the QR links, the App Links host and the WebSocket endpoint.
 
-## Deploy the server
+## Delivery
 
-```bash
-cp infrastructure/.env.example infrastructure/.env   # set PUBLIC_HOST + signing fingerprints
-docker compose -f infrastructure/docker-compose.yml up -d --build
-```
-
-DNS `babyphone.crn-tech.fr` → VPS, ports 80/443 open. Caddy fetches the TLS certificate.
-Check `https://babyphone.crn-tech.fr/.well-known/assetlinks.json`, then on a phone:
-`adb shell pm verify-app-links --re-verify fr.crntech.babyphone`.
-
-Signing fingerprint (debug):
-`keytool -list -v -keystore ~/.android/debug.keystore -storepass android | grep SHA`
+PRs are validated by GitHub Actions; merging to `main` cuts a semver release, pushes a multi-arch image
+to GHCR and deploys it with Terraform on the Raspberry Pi. See [knowledge/delivery.md](knowledge/delivery.md)
+and [knowledge/play-store.md](knowledge/play-store.md).
 
 ## Using it
 

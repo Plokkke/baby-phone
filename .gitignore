@@ -7,4 +7,10 @@ local.properties
 .DS_Store
 captures/
 *.apk
-infrastructure/.env
+.terraform/
+*.tfstate*
+*.keystore
+*.jks
+play-credentials.json
+.env
+infrastructure/bootstrap/tf-state-password

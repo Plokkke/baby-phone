@@ -28,7 +28,7 @@ import kotlin.test.assertNull
 
 class RoomSocketTest {
     private val room = PairingSecret.generate().roomId
-    private val config = ServerConfig(androidCertFingerprints = listOf("AA:BB"))
+    private val config = ServerConfig(version = "1.2.3", androidCertFingerprints = listOf("AA:BB"))
 
     private fun serverTest(block: suspend ApplicationTestBuilder.(HttpClient) -> Unit) = testApplication {
         application { module(config) }
@@ -95,5 +95,10 @@ class RoomSocketTest {
         val body = client.get("/.well-known/assetlinks.json").bodyAsText()
         assertContains(body, "fr.crntech.babyphone")
         assertContains(body, "AA:BB")
+    }
+
+    @Test
+    fun `health reports the deployed version`() = serverTest { client ->
+        assertContains(client.get(Endpoints.HEALTH_PATH).bodyAsText(), "\"version\":\"1.2.3\"")
     }
 }

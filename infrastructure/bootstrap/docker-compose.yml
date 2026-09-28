@@ -1,0 +1,23 @@
+# Out-of-band services Terraform depends on, so they cannot be managed by Terraform itself.
+# Run once on the Raspberry Pi: openssl rand -hex 24 > tf-state-password && docker compose up -d
+services:
+  terraform-state:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: terraform
+      POSTGRES_USER: terraform
+      POSTGRES_PASSWORD_FILE: /run/secrets/tf-state-password
+    secrets:
+      - tf-state-password
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - terraform-state:/var/lib/postgresql
+    restart: unless-stopped
+
+secrets:
+  tf-state-password:
+    file: ./tf-state-password
+
+volumes:
+  terraform-state:
