@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Baby Phone</string>
+
+    <string name="pairing_title">Appairer un téléphone</string>
+    <string name="pairing_hint">Scannez ce QR code avec l\'appareil photo de l\'autre téléphone.</string>
+    <string name="pairing_scan">Scanner un QR code</string>
+    <string name="pairing_waiting">En attente d\'un autre téléphone…</string>
+    <string name="pairing_invalid">QR code non reconnu</string>
+    <plurals name="peers_connected">
+        <item quantity="one">%d autre appareil connecté</item>
+        <item quantity="other">%d autres appareils connectés</item>
+    </plurals>
+
+    <string name="role_title">Ce téléphone est…</string>
+    <string name="role_emitter">Près du bébé</string>
+    <string name="role_receiver">Avec les parents</string>
+    <string name="home_add_device">Ajouter un appareil</string>
+    <string name="home_reset">Réinitialiser l\'appairage</string>
+    <string name="home_reset_confirm">Les autres téléphones devront être appairés à nouveau.</string>
+    <string name="cancel">Annuler</string>
+    <string name="confirm">Confirmer</string>
+    <string name="close">Fermer</string>
+
+    <string name="permission_mic_required">Le micro est nécessaire pour surveiller le bébé.</string>
+    <string name="monitor_failed">La surveillance s\'est arrêtée (micro indisponible ?)</string>
+
+    <string name="server_connecting">Connexion au serveur…</string>
+
+    <string name="emitter_active">Surveillance active</string>
+    <plurals name="emitter_receivers">
+        <item quantity="one">%d parent à l\'écoute</item>
+        <item quantity="other">%d parents à l\'écoute</item>
+    </plurals>
+    <string name="emitter_transmitting">Son transmis</string>
+    <string name="emitter_parent_talking">Un parent parle</string>
+    <string name="emitter_hold_to_stop">Maintenir pour arrêter</string>
+
+    <string name="receiver_emitter_online">Bébé en ligne</string>
+    <string name="receiver_emitter_offline">Bébé hors ligne</string>
+    <string name="receiver_sound_detected">Son détecté</string>
+    <string name="receiver_quiet">Calme</string>
+    <string name="receiver_threshold">Seuil de déclenchement : %d dB</string>
+    <string name="receiver_hold_to_listen">Maintenir pour écouter en direct</string>
+    <string name="receiver_listening">Écoute en direct…</string>
+    <string name="receiver_talk">Parler au bébé</string>
+    <string name="receiver_talking_banner">MICRO OUVERT</string>
+    <string name="receiver_talking_hint">Le bébé vous entend</string>
+    <string name="receiver_talk_remaining">Coupure automatique dans %d s</string>
+    <string name="receiver_stop_talking">Arrêter de parler</string>
+    <string name="receiver_stop">Arrêter l\'écoute</string>
+    <string name="battery_level">%d %%</string>
+
+    <string name="alarm_title">Liaison perdue avec le bébé</string>
+    <string name="alarm_text">Vérifiez le téléphone du bébé et la connexion.</string>
+    <string name="alarm_silence">Couper le son</string>
+
+    <string name="notif_channel_monitor">Surveillance</string>
+    <string name="notif_channel_alarm">Alertes</string>
+    <string name="notif_emitter">Surveillance du bébé active</string>
+    <string name="notif_receiver">À l\'écoute du bébé</string>
+    <string name="notif_stop">Arrêter</string>
+</resources>
