@@ -49,6 +49,14 @@ class WebRoutesTest {
     }
 
     @Test
+    fun `root sends desktops to the web client and phones to the app`() = webTest { client ->
+        client.visit("/", DESKTOP).assertRedirect("/web/")
+        val page = client.visit("/", ANDROID)
+        assertEquals(HttpStatusCode.OK, page.status)
+        assertContains(page.bodyAsText(), "android.intent.category.LAUNCHER")
+    }
+
+    @Test
     fun `mobile browsers are sent back to the app`() = webTest { client ->
         client.visit("/web/", ANDROID).assertRedirect("/pair")
         client.visit("/web", IPHONE).assertRedirect("/pair")

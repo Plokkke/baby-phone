@@ -26,7 +26,7 @@
   <p class="note">Le code d'appairage reste sur votre appareil, il n'est jamais envoyé à ce serveur.</p>
 </main>
 <script>
-  // Only reached when the app did not catch the link (not installed, or opened inside a browser).
+  // Phones land here from / or from a pairing link the app did not catch (not installed, or opened in a browser).
   const ANDROID_PACKAGE = {{ANDROID_PACKAGE}};
   const PLAY_STORE_URL = {{PLAY_STORE_URL}};
 
@@ -39,12 +39,12 @@
     show('install');
   } else if (/Android/.test(userAgent)) {
     show('android');
-    if (pairing) {
-      // Opens the app if installed (the secret is handed over on-device), else the store / install page.
-      const fallback = PLAY_STORE_URL ?? `${location.origin}/pair?install`;
-      location.replace(`intent://${location.host}/pair?${pairing}#Intent;scheme=https;package=${ANDROID_PACKAGE};`
-        + `S.browser_fallback_url=${encodeURIComponent(fallback)};end`);
-    }
+    // Opens the app if installed, else the store / install page. A pairing secret is handed over on-device.
+    const fallback = `S.browser_fallback_url=${encodeURIComponent(PLAY_STORE_URL ?? `${location.origin}/pair?install`)}`;
+    location.replace(pairing
+      ? `intent://${location.host}/pair?${pairing}#Intent;scheme=https;package=${ANDROID_PACKAGE};${fallback};end`
+      : `intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;`
+        + `package=${ANDROID_PACKAGE};${fallback};end`);
   } else if (/iPhone|iPad|iPod/.test(userAgent)) {
     show('ios');
   } else {
