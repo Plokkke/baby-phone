@@ -1,5 +1,6 @@
 # Terraform state backend, shared by every Terraform project on the Raspberry Pi
 # (each stack isolates itself with its own `schema_name`). It lives outside Terraform
+# Host port 5433: 5432 is commonly taken by application databases.
 # because Terraform cannot manage the database holding its own state.
 #
 # Deployed by hand in /srv/docker/tf-backend:
@@ -16,7 +17,7 @@ services:
     secrets:
       - tf-state-password
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - ./volumes/postgres:/var/lib/postgresql
     healthcheck:

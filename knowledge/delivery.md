@@ -31,7 +31,7 @@ Squash-merge PRs: the PR title becomes the commit semantic-release analyses.
    ```
    Needs `curl` and `unzip` (terraform download).
 3. **Secret** `TF_STATE_PG_CONN_STR` in the `production` environment:
-   `postgres://terraform:<password>@127.0.0.1:5432/terraform?sslmode=disable`
+   `postgres://terraform:<password>@127.0.0.1:5433/terraform?sslmode=disable`
 4. **nginx**: install `infrastructure/nginx/babyphone.conf` (adapt certificate paths), `nginx -t && systemctl reload nginx`.
 
 ## Public repository + self-hosted runner
@@ -46,8 +46,8 @@ Still: never approve a fork PR that touches `.github/` without reading it.
 ## Local Terraform
 
 ```bash
-ssh -N -L 5432:127.0.0.1:5432 rpi &          # reach the state database
-export PG_CONN_STR=postgres://terraform:<password>@127.0.0.1:5432/terraform?sslmode=disable
+ssh -N -L 5433:127.0.0.1:5433 rpi &          # reach the state database
+export PG_CONN_STR=postgres://terraform:<password>@127.0.0.1:5433/terraform?sslmode=disable
 terraform -chdir=infrastructure/terraform/server init
 terraform -chdir=infrastructure/terraform/server plan \
   -var image_repository=ghcr.io/plokkke/baby-phone-server -var image_tag=<version> \
