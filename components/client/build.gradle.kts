@@ -40,4 +40,5 @@ kotlin {
 
 compose.resources {
     packageOfResClass = "fr.crntech.babyphone.client.resources"
+    publicResClass = true
 }

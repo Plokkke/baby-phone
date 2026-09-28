@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
   <title>Baby Phone</title>
   <style>
     body { font-family: system-ui, sans-serif; background: #10131a; color: #e8eaf0; margin: 0;
@@ -10,14 +11,45 @@
     main { max-width: 420px; }
     h1 { font-size: 1.6rem; }
     p { color: #a9afc0; line-height: 1.5; }
+    .note { font-size: .85rem; }
   </style>
 </head>
 <body>
 <main>
   <h1>👶 Baby Phone</h1>
-  <p>Ce lien sert à appairer un téléphone. Installez l'application Baby Phone,
-     puis scannez à nouveau le QR code : l'application s'ouvrira directement.</p>
-  <p>Le code d'appairage reste sur votre appareil, il n'est jamais envoyé à ce serveur.</p>
+  <p id="android" hidden>Ouverture de l'application…<br>
+     Si rien ne se passe, installez Baby Phone puis scannez à nouveau le QR code.</p>
+  <p id="install" hidden>L'application Android n'est pas encore disponible sur le Play Store.<br>
+     En attendant, ouvrez <strong class="web-url"></strong> sur un ordinateur.</p>
+  <p id="ios" hidden>Baby Phone n'existe pas sur iPhone.<br>
+     Ouvrez <strong class="web-url"></strong> sur un ordinateur, ou scannez le QR code avec un téléphone Android.</p>
+  <p class="note">Le code d'appairage reste sur votre appareil, il n'est jamais envoyé à ce serveur.</p>
 </main>
+<script>
+  // Only reached when the app did not catch the link (not installed, or opened inside a browser).
+  const ANDROID_PACKAGE = {{ANDROID_PACKAGE}};
+  const PLAY_STORE_URL = {{PLAY_STORE_URL}};
+
+  const show = id => { document.getElementById(id).hidden = false; };
+  document.querySelectorAll('.web-url').forEach(el => { el.textContent = `${location.host}/web`; });
+  const pairing = location.hash.slice(1);
+  const userAgent = navigator.userAgent;
+
+  if (new URLSearchParams(location.search).has('install')) {
+    show('install');
+  } else if (/Android/.test(userAgent)) {
+    show('android');
+    if (pairing) {
+      // Opens the app if installed (the secret is handed over on-device), else the store / install page.
+      const fallback = PLAY_STORE_URL ?? `${location.origin}/pair?install`;
+      location.replace(`intent://${location.host}/pair?${pairing}#Intent;scheme=https;package=${ANDROID_PACKAGE};`
+        + `S.browser_fallback_url=${encodeURIComponent(fallback)};end`);
+    }
+  } else if (/iPhone|iPad|iPod/.test(userAgent)) {
+    show('ios');
+  } else {
+    location.replace(`/web/${location.hash}`);
+  }
+</script>
 </body>
 </html>

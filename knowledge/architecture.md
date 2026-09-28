@@ -17,6 +17,7 @@ shared (KMP: jvm, wasmJs) ◀── server (JVM)
 client (KMP: android, wasmJs)   commonMain only: no expect/actual
    ▲
 android (app shell)             implements client.platform.* (mic, speaker, battery, alarm, storage, UI hooks)
+web (Wasm shell)                same contracts with Web Audio, localStorage, Wake Lock, webcam scanner
 ```
 Everything a device does (sessions, transport, settings, screens) lives once in `client`.
 A platform only provides a `Platform` (hardware + storage + HTTP client), a `PlatformUi`
@@ -25,6 +26,17 @@ A platform only provides a `Platform` (hardware + storage + HTTP client), a `Pla
 Crypto goes through `cryptography-kotlin` (JDK provider on JVM/Android, Web Crypto in browsers),
 hence the suspending `PeerCodec` / `PairingSecret.roomId()`. The frame format is unchanged
 (`nonce(12) || ciphertext+tag`) and a reference vector pins the room id derivation.
+
+## Web client (PC)
+- Served by the relay under `/web/` (bundle embedded in the jar, gzip, content-hashed `.wasm` cached for a year).
+- A full device: emitter or receiver. Mic through an AudioWorklet resampling to 16 kHz (`pcm-capture.js`),
+  playback by scheduling AudioBuffers (latency capped at 0.5 s), alarm = beeps + system notification.
+- Scans with `BarcodeDetector` when the browser has it, else jsQR on webcam frames.
+- Limits: the tab must stay open; a screen Wake Lock keeps the computer awake.
+- Routing by device (`User-Agent`, `Sec-CH-UA-Mobile`, `Sec-Fetch-Mode`):
+  - `/pair` on desktop → 302 `/web/` (the `#s=` fragment survives redirects, so the PC pairs itself);
+  - `/pair` on Android → `intent://…/pair?s=…` opening the app, else `PLAY_STORE_URL` or an install notice;
+  - `/pair` on iOS → message; `/web` on mobile → back to `/pair`.
 
 ## Pairing & security
 - QR = `https://<host>/pair#s=<32-byte secret>`. The secret sits in the URL **fragment**:

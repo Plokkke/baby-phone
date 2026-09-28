@@ -19,7 +19,9 @@ There is no Terraform provider for Play releases: Terraform owns the *infrastruc
    → enables the API, creates the service account, stores `PLAY_SERVICE_ACCOUNT_JSON` in GitHub.
 5. Play Console → Users and permissions → invite the output `service_account_email` (release rights).
 6. `terraform apply -var enable_publishing=true` → sets `PLAY_PUBLISH=true`; every release now reaches the internal track.
-7. Add the **upload** and **Play App Signing** SHA-256 to `infrastructure/terraform/server/terraform.tfvars`,
+7. Set `play_store_url` in `infrastructure/terraform/server/terraform.tfvars`: phones without the app
+   scanning a pairing QR are then sent to the listing.
+8. Add the **upload** and **Play App Signing** SHA-256 to `infrastructure/terraform/server/terraform.tfvars`,
    otherwise App Links (system camera → app) break for store installs.
 
 Note: the service account key lives in the Terraform state (Postgres on the RPi) and in GitHub secrets.

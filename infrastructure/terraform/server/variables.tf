@@ -38,3 +38,9 @@ variable "android_cert_fingerprints" {
   description = "SHA-256 of every certificate signing the app (debug, upload, Play app signing) for App Links"
   type        = list(string)
 }
+
+variable "play_store_url" {
+  description = "Play Store listing Android devices without the app are sent to; empty until published"
+  type        = string
+  default     = ""
+}

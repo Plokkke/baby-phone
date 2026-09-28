@@ -11,6 +11,11 @@ object AudioSpec {
     const val FRAME_BYTES = SAMPLE_RATE * FRAME_MS / 1000 * BYTES_PER_SAMPLE
 
     fun frames(duration: Duration) = (duration.inWholeMilliseconds / FRAME_MS).toInt()
+
+    fun samples(pcm: ByteArray) = pcm.size / BYTES_PER_SAMPLE
+
+    /** Signed 16-bit little-endian sample. */
+    fun sampleAt(pcm: ByteArray, index: Int) = (pcm[2 * index].toInt() and 0xFF) or (pcm[2 * index + 1].toInt() shl 8)
 }
 
 object Timing {

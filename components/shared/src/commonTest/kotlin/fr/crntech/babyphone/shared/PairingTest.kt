@@ -45,6 +45,12 @@ class PairingTest {
     }
 
     @Test
+    fun `android intent query form is accepted`() {
+        val secret = PairingSecret.generate()
+        assertEquals(secret, PairingLink.parse("$url/pair?s=${secret.encode()}"))
+    }
+
+    @Test
     fun `foreign or broken links are rejected`() {
         assertNull(PairingLink.parse("https://example.com/other#s=abc"))
         assertNull(PairingLink.parse("$url/pair"))
