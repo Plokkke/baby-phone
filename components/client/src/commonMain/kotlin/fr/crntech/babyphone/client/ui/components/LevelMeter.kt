@@ -15,17 +15,19 @@ import androidx.compose.ui.unit.dp
 import fr.crntech.babyphone.shared.Threshold
 import fr.crntech.babyphone.client.ui.Palette
 
-/** Horizontal sound meter with the trigger threshold drawn as a vertical mark. */
+/** Horizontal sound meter, with the trigger threshold drawn as a vertical mark when given. */
 @Composable
-fun LevelMeter(levelDb: Float, thresholdDb: Float, modifier: Modifier = Modifier) {
+fun LevelMeter(levelDb: Float, thresholdDb: Float?, modifier: Modifier = Modifier) {
     val level by animateFloatAsState(fraction(levelDb), label = "level")
-    val above = levelDb >= thresholdDb
+    val above = thresholdDb != null && levelDb >= thresholdDb
     Canvas(modifier.fillMaxWidth().height(28.dp)) {
         val radius = CornerRadius(size.height / 2)
         drawRoundRect(Palette.surface, cornerRadius = radius)
         drawRoundRect(if (above) Palette.sound else Palette.calm, size = Size(size.width * level, size.height), cornerRadius = radius)
-        val x = size.width * fraction(thresholdDb)
-        drawLine(Color.White, Offset(x, -4f), Offset(x, size.height + 4f), strokeWidth = 3.dp.toPx())
+        if (thresholdDb != null) {
+            val x = size.width * fraction(thresholdDb)
+            drawLine(Color.White, Offset(x, -4f), Offset(x, size.height + 4f), strokeWidth = 3.dp.toPx())
+        }
     }
 }
 
