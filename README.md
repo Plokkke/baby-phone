@@ -19,7 +19,6 @@ The server that connects them relays encrypted bytes it cannot read, stores noth
 
 ## Contents
 
-- [Designed around the nursery](#designed-around-the-nursery)
 - [Features](#features)
 - [The user flow](#the-user-flow)
 - [Architecture](#architecture)
@@ -33,23 +32,6 @@ The server that connects them relays encrypted bytes it cannot read, stores noth
 - [Repository layout](#repository-layout)
 
 ---
-
-## Designed around the nursery
-
-Every feature starts from something that goes wrong at 3 a.m.
-
-| In the real world… | …so the app |
-|---|---|
-| A baby monitor that silently stops is worse than none. | Sends a heartbeat every 250 ms and **rings the parents** when it stops for 10 s. |
-| The baby's phone rings, buzzes, lights up. | Turns **do-not-disturb on** while monitoring (and restores it after), keeps the screen **black and dimmed**. |
-| The parents' phone was left on low volume. | **Raises the volume**, warns when media or alarm volume drops, offers a test sound. |
-| Nobody wants to hear 8 hours of breathing. | Transmits **only when the room gets loud**, with a pre-roll so the first cry is never cut. |
-| Sometimes you just want to check. | **Hold to listen live**, whatever the threshold. Let go and it stops. |
-| Soothing the baby from the next room. | **Talk back**, with a full-screen red "MICROPHONE ON" and an automatic 60 s cut-off. |
-| Labels are unreadable half asleep. | Roles are chosen by **picture**: a sleeping baby 👶🌙 or talking parents 👥💬. |
-| Pairing apps usually mean accounts. | **No account, no login**: scan a QR code with the system camera, done. |
-| A baby monitor is a microphone in a child's room. | Audio is **end-to-end encrypted**; the server only ever sees opaque bytes. |
-| A silent failure looks like a quiet baby. | Detects a microphone that **never starts or only captures silence**, and says why. |
 
 ## Features
 
