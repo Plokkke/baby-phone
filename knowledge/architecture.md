@@ -54,7 +54,8 @@ hence the suspending `PeerCodec` / `PairingSecret.roomId()`. The frame format is
 ## Audio
 - 16 kHz mono PCM16, 20 ms frames (~256 kbit/s while transmitting, nothing when quiet).
 - `SoundGate`: 2 s pre-roll (the start of a cry is not lost) + 5 s hangover.
-- Status every 250 ms (peak level, threshold, battery), even when quiet → heartbeat.
+- Status every 250 ms (peak level, threshold, battery, do-not-disturb), even when quiet → heartbeat.
+- CBOR decoding ignores unknown fields, so newer apps can add status fields without breaking older ones.
 - **Hold to listen**: the receiver sends `ForceListen` every 500 ms while pressed;
   the emitter opens the gate for 1.5 s after each one, so a lost finger/connection closes it.
 - **Talk-back**: toggle, whole screen turns red, auto-off after 60 s.
@@ -65,6 +66,16 @@ hence the suspending `PeerCodec` / `PairingSecret.roomId()`. The frame format is
   armed once the emitter has been heard at least once.
 - Foreground service (microphone / mediaPlayback) + partial wake lock + low-latency Wi-Fi lock.
 - Transport reconnects forever (2 s delay), WebSocket ping every 5 s.
+
+## Sound safety
+- **Emitter**: turns do-not-disturb on when monitoring starts and restores it on stop, with an in-app switch.
+  Android needs the one-time "Do Not Disturb access" (the switch opens that system screen). The app uses the
+  `ALARMS` filter: `NONE` (total silence) would also mute the parents talking back. The state travels in
+  `EmitterStatus.quiet` and the receiver warns when the baby's phone is not silenced.
+- **Receiver**: watches media + alarm volumes (baby audio, lost-link alert), total-silence DND and disabled
+  notifications; raises volumes at start and offers "Monter le volume" / "Tester le son".
+- **Browsers** cannot read the system volume nor touch DND: only "audio blocked until a click" and
+  "notifications denied" are detected, plus a test chime.
 
 ## Extension points / roadmap
 - `net/Transport` is the seam for a **LAN mode** (NSD discovery, emitter hosts a local WebSocket):

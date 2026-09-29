@@ -40,10 +40,13 @@ fun Route.webRoutes(config: ServerConfig) {
     get(Endpoints.HEALTH_PATH) { call.respondText(health, ContentType.Application.Json) }
     get("/.well-known/assetlinks.json") { call.respondText(assetLinks, ContentType.Application.Json) }
 
-    // Browsers keep the #fragment across redirects, so the pairing secret follows without reaching us.
-    get(PairingLink.PATH) {
-        if (call.request.isDesktopNavigation()) call.respondRedirect("$WEB_PATH/")
-        else call.respondText(pairPage, ContentType.Text.Html)
+    // Entry points: desktops get the web client, phones are handed over to the app (or the store).
+    // Browsers keep the #fragment across redirects, so a pairing secret follows without reaching us.
+    listOf("/", PairingLink.PATH).forEach { path ->
+        get(path) {
+            if (call.request.isDesktopNavigation()) call.respondRedirect("$WEB_PATH/")
+            else call.respondText(pairPage, ContentType.Text.Html)
+        }
     }
 
     route(WEB_PATH) {

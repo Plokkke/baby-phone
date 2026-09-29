@@ -68,7 +68,10 @@ import fr.crntech.babyphone.shared.Role
 import fr.crntech.babyphone.shared.Threshold
 import fr.crntech.babyphone.shared.Timing
 import fr.crntech.babyphone.client.ui.Palette
+import fr.crntech.babyphone.client.ui.components.EmitterQuietWarning
 import fr.crntech.babyphone.client.ui.components.LevelMeter
+import fr.crntech.babyphone.client.ui.components.MicrophoneCheck
+import fr.crntech.babyphone.client.ui.components.SoundCheck
 import fr.crntech.babyphone.client.ui.components.RoleIcon
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
@@ -90,7 +93,7 @@ fun ReceiverScreen(session: ReceiverSession, onStop: () -> Unit) {
         ) {
             if (state.linkLost) AlarmBanner(state.alarmSilenced, session::silenceAlarm)
             if (talkingSince != null) {
-                TalkingPanel(talkingSince) { session.setTalking(false) }
+                TalkingPanel(talkingSince, state) { session.setTalking(false) }
             } else {
                 MonitorPanel(state, session, onStop)
             }
@@ -100,7 +103,10 @@ fun ReceiverScreen(session: ReceiverSession, onStop: () -> Unit) {
 
 @Composable
 private fun MonitorPanel(state: ReceiverSession.State, session: ReceiverSession, onStop: () -> Unit) {
+    val sound by session.sound.collectAsStateWithLifecycle()
     StatusRow(state)
+    EmitterQuietWarning(state.emitterQuiet)
+    SoundCheck(sound, session::makeAudible, session::playTestSound)
     Text(
         stringResource(if (state.transmitting) Res.string.receiver_sound_detected else Res.string.receiver_quiet),
         style = MaterialTheme.typography.headlineMedium,
@@ -183,7 +189,7 @@ private fun HoldToListen(listening: Boolean, onListening: (Boolean) -> Unit) {
 }
 
 @Composable
-private fun TalkingPanel(since: TimeMark, onStop: () -> Unit) {
+private fun TalkingPanel(since: TimeMark, state: ReceiverSession.State, onStop: () -> Unit) {
     val remaining by produceState((Timing.TALKBACK_MAX - since.elapsedNow()).inWholeSeconds, since) {
         while (true) {
             value = (Timing.TALKBACK_MAX - since.elapsedNow()).inWholeSeconds.coerceAtLeast(0)
@@ -197,6 +203,7 @@ private fun TalkingPanel(since: TimeMark, onStop: () -> Unit) {
     )
     Text(stringResource(Res.string.receiver_talking_hint), color = Color.White)
     Text(stringResource(Res.string.receiver_talk_remaining, remaining.toInt()), color = Color.White)
+    MicrophoneCheck(state.talkMicrophone, state.talkLevelDb, thresholdDb = null, Modifier.fillMaxWidth())
     Button(
         onClick = onStop,
         colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Palette.talk),
