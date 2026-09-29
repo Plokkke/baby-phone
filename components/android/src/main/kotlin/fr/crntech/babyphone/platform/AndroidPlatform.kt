@@ -12,18 +12,23 @@ import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.pingInterval
 import kotlin.time.Duration.Companion.seconds
 
-fun androidPlatform(context: Context) = Platform(
-    publicUrl = BuildConfig.PUBLIC_URL,
-    deviceName = Build.MODEL,
-    httpClient = HttpClient(OkHttp) {
-        install(WebSockets) { pingInterval = 5.seconds }
-    },
-    storage = PreferencesStorage(context),
-    microphone = AndroidMicrophone,
-    speaker = { AndroidSpeaker() },
-    battery = AndroidBattery(context),
-    alarm = { AndroidAlarm(context) },
-)
+fun androidPlatform(context: Context): Platform {
+    val quietMode = AndroidQuietMode(context)
+    return Platform(
+        publicUrl = BuildConfig.PUBLIC_URL,
+        deviceName = Build.MODEL,
+        httpClient = HttpClient(OkHttp) {
+            install(WebSockets) { pingInterval = 5.seconds }
+        },
+        storage = PreferencesStorage(context),
+        microphone = AndroidMicrophone,
+        speaker = { AndroidSpeaker() },
+        battery = AndroidBattery(context),
+        alarm = { AndroidAlarm(context) },
+        quietMode = quietMode,
+        soundOutput = AndroidSoundOutput(context, quietMode),
+    )
+}
 
 private class PreferencesStorage(context: Context) : KeyValueStorage {
     private val preferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)

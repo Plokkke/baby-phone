@@ -28,6 +28,8 @@ sealed interface PeerMessage {
         val levelDb: Float,
         val thresholdDb: Float,
         val transmitting: Boolean,
+        /** Do-not-disturb on the emitter; null when the platform cannot tell. */
+        val quiet: Boolean? = null,
     ) : PeerMessage
 
     /** 16-bit little-endian mono PCM, see [AudioSpec]. */

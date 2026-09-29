@@ -14,14 +14,17 @@ import kotlinx.serialization.cbor.Cbor
 class PeerCodec private constructor(private val cipher: IvAuthenticatedCipher) {
 
     suspend fun encode(message: PeerMessage): ByteArray =
-        cipher.encrypt(Cbor.encodeToByteArray(PeerMessage.serializer(), message))
+        cipher.encrypt(CBOR.encodeToByteArray(PeerMessage.serializer(), message))
 
     /** Returns null for frames that are malformed or not sealed with this pairing's key. */
     suspend fun decode(frame: ByteArray): PeerMessage? = runCatching {
-        Cbor.decodeFromByteArray(PeerMessage.serializer(), cipher.decrypt(frame))
+        CBOR.decodeFromByteArray(PeerMessage.serializer(), cipher.decrypt(frame))
     }.getOrNull()
 
     companion object {
+        /** Tolerates fields added by newer app versions. */
+        private val CBOR = Cbor { ignoreUnknownKeys = true }
+
         suspend fun create(secret: PairingSecret): PeerCodec {
             val key = CryptographyProvider.Default.get(AES.GCM)
                 .keyDecoder()

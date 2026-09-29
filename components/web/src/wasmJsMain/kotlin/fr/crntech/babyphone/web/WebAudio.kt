@@ -29,6 +29,18 @@ object WebAudio {
         if (context.state != "running") context.resume()
     }
 
+    fun tone(frequencyHz: Float, durationS: Double, delayS: Double = 0.0) {
+        val start = context.currentTime + delayS
+        val oscillator = context.createOscillator().apply {
+            type = "square"
+            frequency.value = frequencyHz
+        }
+        val volume = context.createGain().apply { gain.value = 0.2f }
+        oscillator.connect(volume).connect(context.destination)
+        oscillator.start(start)
+        oscillator.stop(start + durationS)
+    }
+
     suspend fun ensureCaptureWorklet() {
         if (workletLoaded) return
         context.audioWorklet.addModule("pcm-capture.js").await<JsAny?>()

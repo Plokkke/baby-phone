@@ -7,6 +7,10 @@ import fr.crntech.babyphone.client.platform.Battery
 import fr.crntech.babyphone.client.platform.BatteryState
 import fr.crntech.babyphone.client.platform.KeyValueStorage
 import fr.crntech.babyphone.client.platform.Platform
+import fr.crntech.babyphone.client.platform.QuietMode
+import fr.crntech.babyphone.client.platform.QuietState
+import fr.crntech.babyphone.client.platform.SoundOutput
+import fr.crntech.babyphone.client.platform.SoundOutputState
 import fr.crntech.babyphone.client.resources.Res
 import fr.crntech.babyphone.client.resources.alarm_text
 import fr.crntech.babyphone.client.resources.alarm_title
@@ -19,6 +23,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.await
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.w3c.notifications.GRANTED
@@ -37,6 +43,8 @@ fun browserPlatform() = Platform(
     speaker = ::BrowserSpeaker,
     battery = BrowserBattery,
     alarm = ::BrowserAlarm,
+    quietMode = BrowserQuietMode,
+    soundOutput = BrowserSoundOutput,
 )
 
 private object LocalStorage : KeyValueStorage {
@@ -78,7 +86,7 @@ private class BrowserAlarm : Alarm {
         if (beeping != null) return
         beeping = MainScope().launch {
             while (true) {
-                beep()
+                WebAudio.tone(880f, 0.4)
                 delay(1.seconds)
             }
         }
@@ -94,17 +102,43 @@ private class BrowserAlarm : Alarm {
         notification?.close()
         notification = null
     }
+}
 
-    private fun beep() {
-        val context = WebAudio.context
-        val now = context.currentTime
-        val tone = context.createOscillator().apply {
-            type = "square"
-            frequency.value = 880f
+/** A web page cannot touch the system do-not-disturb. */
+private object BrowserQuietMode : QuietMode {
+    override val state = MutableStateFlow(QuietState.UNSUPPORTED)
+
+    override fun setEnabled(enabled: Boolean) = Unit
+}
+
+/** The system volume is invisible to pages: only browser-side blockers can be detected. */
+private object BrowserSoundOutput : SoundOutput {
+    private val _state = MutableStateFlow(read())
+    override val state = _state.asStateFlow()
+
+    init {
+        MainScope().launch {
+            while (true) {
+                _state.value = read()
+                delay(2.seconds)
+            }
         }
-        val volume = context.createGain().apply { gain.value = 0.2f }
-        tone.connect(volume).connect(context.destination)
-        tone.start(now)
-        tone.stop(now + 0.4)
     }
+
+    /** Must run in a click handler: that is when browsers allow audio and permission prompts. */
+    override fun makeAudible() {
+        WebAudio.unlock()
+        Notification.requestPermission()
+    }
+
+    override fun playTestSound() {
+        WebAudio.unlock()
+        WebAudio.tone(660f, 0.15)
+        WebAudio.tone(880f, 0.25, delayS = 0.18)
+    }
+
+    private fun read() = SoundOutputState(
+        muted = WebAudio.context.state != "running",
+        alertsBlocked = Notification.permission != NotificationPermission.GRANTED,
+    )
 }
