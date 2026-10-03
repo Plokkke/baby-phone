@@ -37,7 +37,7 @@ import fr.crntech.babyphone.client.resources.role_title
 import fr.crntech.babyphone.shared.Peer
 import fr.crntech.babyphone.shared.Role
 import fr.crntech.babyphone.client.ui.components.PeerList
-import fr.crntech.babyphone.client.ui.components.QrCode
+import fr.crntech.babyphone.client.ui.components.PairingCode
 import fr.crntech.babyphone.client.ui.components.RoleIcon
 
 @Composable
@@ -74,7 +74,7 @@ fun HomeScreen(
             onDismissRequest = { showQr = false },
             confirmButton = { TextButton(onClick = { showQr = false }) { Text(stringResource(Res.string.close)) } },
             title = { Text(stringResource(Res.string.home_add_device)) },
-            text = { QrCode(link, Modifier.fillMaxWidth()) },
+            text = { PairingCode(link, Modifier.fillMaxWidth()) },
         )
     }
     if (confirmReset) {

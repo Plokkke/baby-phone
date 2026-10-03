@@ -40,6 +40,13 @@ private object BrowserPlatformUi : PlatformUi {
     override fun rememberQrScanner(onScanned: (String) -> Unit): (() -> Unit)? =
         if (QrScanner.available) { { QrScanner.open(onScanned) } } else null
 
+    @Composable
+    override fun rememberCopier(): (String) -> Unit = ::writeClipboard
+
+    /** Runs inside the click: browsers only open the share sheet on a user gesture. */
+    @Composable
+    override fun rememberSharer(): ((String) -> Unit)? = if (canShare()) ::shareUrl else null
+
     /** Runs inside the click: the only moment browsers allow starting audio and asking for notifications. */
     @Composable
     override fun rememberRoleStarter(start: (Role) -> Unit, onMicrophoneDenied: () -> Unit): (Role) -> Unit = { role ->

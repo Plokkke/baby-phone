@@ -24,7 +24,7 @@ import fr.crntech.babyphone.client.resources.pairing_hint
 import fr.crntech.babyphone.client.resources.pairing_scan
 import fr.crntech.babyphone.client.resources.pairing_title
 import fr.crntech.babyphone.client.resources.pairing_waiting
-import fr.crntech.babyphone.client.ui.components.QrCode
+import fr.crntech.babyphone.client.ui.components.PairingCode
 
 @Composable
 fun PairingScreen(link: String, onScan: (() -> Unit)?) {
@@ -34,7 +34,7 @@ fun PairingScreen(link: String, onScan: (() -> Unit)?) {
         verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
     ) {
         Text(stringResource(Res.string.pairing_title), style = MaterialTheme.typography.headlineSmall)
-        QrCode(link, Modifier.fillMaxWidth(0.8f))
+        PairingCode(link, Modifier.fillMaxWidth(0.8f))
         Text(stringResource(Res.string.pairing_hint), textAlign = TextAlign.Center)
         Text(stringResource(Res.string.pairing_waiting), style = MaterialTheme.typography.bodySmall)
         LinearProgressIndicator(Modifier.fillMaxWidth(0.5f))

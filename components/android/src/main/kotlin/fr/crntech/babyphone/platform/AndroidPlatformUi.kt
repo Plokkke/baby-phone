@@ -1,8 +1,13 @@
 package fr.crntech.babyphone.platform
 
 import android.Manifest
+import android.content.ClipData
+import android.content.ClipDescription
+import android.content.ClipboardManager
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.PersistableBundle
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -13,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import androidx.core.content.getSystemService
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
@@ -31,6 +37,30 @@ object AndroidPlatformUi : PlatformUi {
                 val options = GmsBarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build()
                 GmsBarcodeScanning.getClient(context, options).startScan()
                     .addOnSuccessListener { barcode -> barcode.rawValue?.let(callback.value) }
+            }
+        }
+    }
+
+    @Composable
+    override fun rememberCopier(): (String) -> Unit {
+        val context = LocalContext.current
+        return remember(context) {
+            { text ->
+                val clip = ClipData.newPlainText(null, text).apply {
+                    description.extras = PersistableBundle().apply { putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true) }
+                }
+                context.getSystemService<ClipboardManager>()?.setPrimaryClip(clip)
+            }
+        }
+    }
+
+    @Composable
+    override fun rememberSharer(): (String) -> Unit {
+        val context = LocalContext.current
+        return remember(context) {
+            { text ->
+                val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
+                context.startActivity(Intent.createChooser(send, null))
             }
         }
     }

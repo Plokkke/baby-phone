@@ -5,6 +5,9 @@
     <string name="pairing_scan">Scanner un QR code</string>
     <string name="pairing_waiting">En attente d'un autre appareil…</string>
     <string name="pairing_invalid">QR code non reconnu</string>
+    <string name="pairing_copy">Copier le lien</string>
+    <string name="pairing_copied">Lien copié</string>
+    <string name="pairing_share">Partager</string>
     <plurals name="peers_connected">
         <item quantity="one">%1$d autre appareil connecté</item>
         <item quantity="other">%1$d autres appareils connectés</item>

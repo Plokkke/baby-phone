@@ -91,6 +91,14 @@ internal fun requestScreenWakeLock(): Promise<WakeLockSentinel>? =
 internal fun nativeQrDetector(): BarcodeDetector? =
     js("('BarcodeDetector' in window) ? new BarcodeDetector({ formats: ['qr_code'] }) : null")
 
+internal fun writeClipboard(text: String): Unit = js("{ navigator.clipboard?.writeText(text).catch(() => {}); }")
+
+/** Web Share API (mobile browsers, Safari, Chrome on macOS/Windows); absent from Firefox desktop. */
+internal fun canShare(): Boolean = js("typeof navigator.share === 'function'")
+
+/** Cancelling the share sheet rejects the promise: that is not an error. */
+internal fun shareUrl(url: String): Unit = js("{ navigator.share({ url }).catch(() => {}); }")
+
 internal fun microphoneConstraints(processed: Boolean): JsAny =
     js("({ audio: { channelCount: 1, echoCancellation: processed, noiseSuppression: processed, autoGainControl: processed } })")
 

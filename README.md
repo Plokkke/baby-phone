@@ -37,6 +37,7 @@ The server that connects them relays encrypted bytes it cannot read, stores noth
 
 ### 🔗 Pairing
 - **One scan.** The first device shows a QR code; the other scans it with the **system camera** (verified Android App Links open the app directly) or with the in-app scanner.
+- **Or a link.** The same pairing link can be copied or sent through the system share sheet (mail, messaging) to a device that cannot scan.
 - **As many parents as needed.** Any paired device can show the code again to add another receiver.
 - **Works from a computer.** A desktop browser shows the QR to be scanned, and can scan phones with its webcam.
 - **Smart entry point.** `babyphone.crn-tech.fr` opens the web app on a computer, the Android app on a phone — or the Play Store when it is not installed.
