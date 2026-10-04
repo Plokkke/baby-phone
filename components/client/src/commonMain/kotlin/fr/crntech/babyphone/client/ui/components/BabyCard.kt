@@ -65,7 +65,6 @@ fun BabyCard(
                 )
             }
             LevelMeter(status?.levelDb ?: Loudness.FLOOR_DB, status?.thresholdDb, onThresholdChange = onThreshold.takeIf { status != null })
-            if (talk != null) MicrophoneCheck(talk.microphone, talk.levelDb, thresholdDb = null)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 HoldButton(
                     Icons.Filled.Hearing, stringResource(Res.string.receiver_hold_to_listen), listening, Palette.sound, onListen,
@@ -76,6 +75,8 @@ fun BabyCard(
                     Modifier.weight(1f),
                 )
             }
+            // Below the buttons, so nothing moves under the finger holding "talk".
+            if (talk != null) MicrophoneCheck(talk.microphone, talk.levelDb, thresholdDb = null)
         }
     }
 }
