@@ -23,7 +23,7 @@ class AppContainer(private val platform: Platform) {
     suspend fun peerLink(secret: PairingSecret, deviceId: String, role: Role): PeerLink {
         val self = Peer(deviceId, platform.deviceName, role)
         val url = Endpoints.roomSocket(platform.publicUrl, secret.roomId(), self)
-        return PeerLink(ServerTransport(platform.httpClient, url), PeerCodec.create(secret))
+        return PeerLink(ServerTransport(platform.httpClient, url), PeerCodec.create(secret), deviceId)
     }
 
     suspend fun createSession(role: Role): MonitorSession {

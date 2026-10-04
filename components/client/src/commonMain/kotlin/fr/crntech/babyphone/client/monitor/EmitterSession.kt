@@ -14,13 +14,18 @@ import fr.crntech.babyphone.shared.Role
 import fr.crntech.babyphone.shared.SoundGate
 import fr.crntech.babyphone.shared.Threshold
 import fr.crntech.babyphone.shared.Timing
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.updateAndGet
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.concurrent.Volatile
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.TimeSource
@@ -53,9 +58,10 @@ class EmitterSession(
 
     private val clock = TimeSource.Monotonic
     @Volatile private var forcedUntil = clock.markNow()
-    @Volatile private var talkbackUntil = clock.markNow()
     @Volatile private var peakDb = Loudness.FLOOR_DB
     private val microphoneHealth = MicrophoneHealth()
+    private val parentTalking = MutableStateFlow(false)
+    private val parentVoice = Channel<Unit>(Channel.CONFLATED)
 
     /** Silences the phone for the night, and gives it back as it was found. */
     override suspend fun run() {
@@ -73,30 +79,36 @@ class EmitterSession(
         launch { link.connected.collect { c -> _state.update { it.copy(connected = c) } } }
         launch { link.presence.collect { peers -> _state.update { s -> s.copy(receivers = peers.count { it.role == Role.RECEIVER }) } } }
         launch { receive() }
+        launch { trackParentVoice() }
         launch { capture() }
         reportStatus()
     }
 
+    /**
+     * Full duplex: while a parent talks, the echo-cancelled microphone keeps streaming,
+     * so the parent hears the baby without hearing their own voice back.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
     private suspend fun capture() {
         val gate = SoundGate()
-        microphone.frames(MicMode.AMBIENT).collect { frame ->
+        parentTalking.flatMapLatest { talking ->
+            microphone.frames(if (talking) MicMode.VOICE else MicMode.AMBIENT).map { it to talking }
+        }.collect { (frame, talking) ->
             val level = Loudness.dbfs(frame)
             peakDb = maxOf(peakDb, level)
-            microphoneHealth.onFrame(level)
-            // Half-duplex: never send the parent's own voice back while it plays here.
-            if (talkbackUntil.hasNotPassedNow()) return@collect
-            val triggered = forcedUntil.hasNotPassedNow() || level >= _state.value.thresholdDb
+            if (!talking) microphoneHealth.onFrame(level)
+            val triggered = talking || forcedUntil.hasNotPassedNow() || level >= _state.value.thresholdDb
             gate.process(frame, triggered).forEach { link.send(PeerMessage.Audio(it)) }
             _state.update { it.copy(transmitting = gate.isOpen) }
         }
     }
 
-    private suspend fun receive() = speaker().use { output ->
-        link.messages.collect { message ->
+    private suspend fun receive() = SpeakerMixer(speaker).use { speakers ->
+        link.messages.collect { (from, _, message) ->
             when (message) {
                 is PeerMessage.Audio -> {
-                    talkbackUntil = clock.markNow() + ECHO_GUARD
-                    output.play(message.pcm)
+                    parentVoice.trySend(Unit)
+                    speakers.play(from, message.pcm)
                 }
                 is PeerMessage.SetThreshold -> {
                     val db = message.db.coerceIn(Threshold.MIN_DB, Threshold.MAX_DB)
@@ -104,8 +116,17 @@ class EmitterSession(
                     settings.setThreshold(db)
                 }
                 PeerMessage.ForceListen -> forcedUntil = clock.markNow() + Timing.FORCE_LISTEN_TTL
-                is PeerMessage.EmitterStatus -> Unit
+                is PeerMessage.EmitterStatus, is PeerMessage.Intercom -> Unit
             }
+        }
+    }
+
+    private suspend fun trackParentVoice(): Nothing {
+        while (true) {
+            parentVoice.receive()
+            parentTalking.value = true
+            while (withTimeoutOrNull(VOICE_GRACE) { parentVoice.receive() } != null) Unit
+            parentTalking.value = false
         }
     }
 
@@ -114,7 +135,7 @@ class EmitterSession(
             delay(Timing.STATUS_INTERVAL)
             val level = peakDb.also { peakDb = Loudness.FLOOR_DB }
             val current = _state.updateAndGet {
-                it.copy(levelDb = level, parentTalking = talkbackUntil.hasNotPassedNow(), microphone = microphoneHealth.status())
+                it.copy(levelDb = level, parentTalking = parentTalking.value, microphone = microphoneHealth.status())
             }
             val power = battery.read()
             val quiet = quietMode.state.value.takeIf { it.supported }?.enabled
@@ -123,6 +144,7 @@ class EmitterSession(
     }
 
     private companion object {
-        val ECHO_GUARD = 300.milliseconds
+        /** Bridges network jitter between voice frames, so the microphone is not switched back and forth. */
+        val VOICE_GRACE = 500.milliseconds
     }
 }

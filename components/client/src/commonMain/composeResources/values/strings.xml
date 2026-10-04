@@ -36,18 +36,16 @@
     <string name="emitter_parent_talking">Un parent parle</string>
     <string name="emitter_hold_to_stop">Maintenir pour arrêter</string>
 
-    <string name="receiver_emitter_online">Bébé en ligne</string>
     <string name="receiver_emitter_offline">Bébé hors ligne</string>
     <string name="receiver_sound_detected">Son détecté</string>
     <string name="receiver_quiet">Calme</string>
+    <string name="receiver_no_baby">En attente du téléphone d'un bébé…</string>
+    <string name="receiver_hold_to_listen">Écouter</string>
+    <string name="receiver_hold_to_talk">Parler</string>
+    <string name="parents_title">Parents</string>
+    <string name="parents_alone">Aucun autre parent à l'écoute</string>
+    <string name="parents_hold_to_talk">Parler aux parents</string>
     <string name="receiver_threshold">Seuil de déclenchement : %1$d dB</string>
-    <string name="receiver_hold_to_listen">Maintenir pour écouter en direct</string>
-    <string name="receiver_listening">Écoute en direct…</string>
-    <string name="receiver_talk">Parler au bébé</string>
-    <string name="receiver_talking_banner">MICRO OUVERT</string>
-    <string name="receiver_talking_hint">Le bébé vous entend</string>
-    <string name="receiver_talk_remaining">Coupure automatique dans %1$d s</string>
-    <string name="receiver_stop_talking">Arrêter de parler</string>
     <string name="receiver_stop">Arrêter l'écoute</string>
     <string name="battery_level">%1$d %</string>
 
