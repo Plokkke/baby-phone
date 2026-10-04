@@ -20,10 +20,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import fr.crntech.babyphone.client.resources.Res
+import fr.crntech.babyphone.client.resources.app_version
 import fr.crntech.babyphone.client.resources.cancel
 import fr.crntech.babyphone.client.resources.close
 import fr.crntech.babyphone.client.resources.confirm
@@ -47,6 +49,7 @@ fun HomeScreen(
     onRole: (Role) -> Unit,
     onScan: (() -> Unit)?,
     onReset: () -> Unit,
+    appVersion: String?,
 ) {
     var showQr by rememberSaveable { mutableStateOf(false) }
     var confirmReset by rememberSaveable { mutableStateOf(false) }
@@ -67,6 +70,7 @@ fun HomeScreen(
             if (onScan != null) TextButton(onClick = onScan) { Text(stringResource(Res.string.pairing_scan)) }
             TextButton(onClick = { confirmReset = true }) { Text(stringResource(Res.string.home_reset)) }
         }
+        appVersion?.let { Text(stringResource(Res.string.app_version, it), style = MaterialTheme.typography.labelSmall, color = Color.Gray) }
     }
 
     if (showQr) {

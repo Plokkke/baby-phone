@@ -37,6 +37,7 @@ import kotlin.time.Duration.Companion.seconds
 fun browserPlatform() = Platform(
     publicUrl = window.location.origin,
     deviceName = "Navigateur (${window.navigator.platform})",
+    appVersion = null,
     httpClient = HttpClient(Js) { install(WebSockets) },
     storage = LocalStorage,
     microphone = BrowserMicrophone,

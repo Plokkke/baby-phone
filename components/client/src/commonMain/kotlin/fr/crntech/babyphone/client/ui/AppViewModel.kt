@@ -29,6 +29,7 @@ enum class Notice { INVALID_PAIRING_LINK, MICROPHONE_REQUIRED }
 
 class AppViewModel(private val container: AppContainer, private val monitor: MonitorController) : ViewModel() {
     private val settings = container.settings
+    val appVersion = container.appVersion
     private val otherPeers = MutableStateFlow(emptyList<Peer>())
     private val _notices = Channel<Notice>(Channel.BUFFERED)
     val notices = _notices.receiveAsFlow()

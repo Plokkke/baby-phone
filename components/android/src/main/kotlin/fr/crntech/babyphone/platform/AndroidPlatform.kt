@@ -17,6 +17,7 @@ fun androidPlatform(context: Context): Platform {
     return Platform(
         publicUrl = BuildConfig.PUBLIC_URL,
         deviceName = Build.MODEL,
+        appVersion = BuildConfig.VERSION_NAME,
         httpClient = HttpClient(OkHttp) {
             install(WebSockets) { pingInterval = 5.seconds }
         },

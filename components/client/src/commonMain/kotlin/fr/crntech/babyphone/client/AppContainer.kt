@@ -17,6 +17,7 @@ import fr.crntech.babyphone.shared.Role
 /** Manual dependency wiring. The transport is picked here, so a LAN transport can slot in later. */
 class AppContainer(private val platform: Platform) {
     val settings = SettingsStore(platform.storage)
+    val appVersion = platform.appVersion
 
     fun pairingLink(secret: PairingSecret) = PairingLink.build(platform.publicUrl, secret)
 
