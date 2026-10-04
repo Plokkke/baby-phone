@@ -8,14 +8,17 @@ host_ip="${HOST_IP:-$(ipconfig getifaddr en0 2>/dev/null || hostname -I | awk '{
 port="${PORT:-8080}"
 url="http://${host_ip}:${port}"
 adb="${ANDROID_HOME:-$HOME/Library/Android/sdk}/platform-tools/adb"
+# A separate app: installs next to the released one, with its own pairing and no version conflict.
+app_id="fr.crntech.babyphone.local"
+gradle_args=(-Pbabyphone.publicUrl="$url" -Pbabyphone.applicationId="$app_id")
 
 if "$adb" devices | grep -qw device$; then
-    ./gradlew :android:installDebug -Pbabyphone.publicUrl="$url"
+    ./gradlew :android:installDebug "${gradle_args[@]}"
 else
-    ./gradlew :android:assembleDebug -Pbabyphone.publicUrl="$url"
+    ./gradlew :android:assembleDebug "${gradle_args[@]}"
     echo "No phone connected to adb: install components/android/build/outputs/apk/debug/android-debug.apk by hand,"
     echo "or connect one (USB, or 'adb connect <ip>:<port>' from the phone's Wireless debugging screen) and run this again."
 fi
 
 echo "Relay on $url — web client on http://localhost:${port}/web/ from this computer"
-PORT="$port" ./gradlew :server:run
+PORT="$port" ANDROID_PACKAGE="$app_id" ./gradlew :server:run
