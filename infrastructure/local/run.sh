@@ -23,4 +23,4 @@ else
 fi
 
 echo "Relay on $url — web client on http://localhost:${port}/web/ from this computer"
-PORT="$port" ANDROID_PACKAGE="$app_id" ./gradlew :server:run
+PORT="$port" ANDROID_PACKAGE="$app_id" APP_VERSION="$version" ./gradlew :server:run
