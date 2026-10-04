@@ -10,7 +10,9 @@ url="http://${host_ip}:${port}"
 adb="${ANDROID_HOME:-$HOME/Library/Android/sdk}/platform-tools/adb"
 # A separate app: installs next to the released one, with its own pairing and no version conflict.
 app_id="fr.crntech.babyphone.local"
-gradle_args=(-Pbabyphone.publicUrl="$url" -Pbabyphone.applicationId="$app_id")
+# The commit in the version tells on the phone which build is installed.
+version="0.0.0-dev.$(git rev-parse --short HEAD)$(git diff --quiet HEAD || echo .modified)"
+gradle_args=(-Pbabyphone.publicUrl="$url" -Pbabyphone.applicationId="$app_id" -Pbabyphone.version="$version")
 
 if "$adb" devices | grep -qw device$; then
     ./gradlew :android:installDebug "${gradle_args[@]}"
