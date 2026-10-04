@@ -5,6 +5,7 @@ import fr.crntech.babyphone.shared.ServerEvent
 import fr.crntech.babyphone.shared.Timing
 import fr.crntech.babyphone.shared.Wire
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readBytes
@@ -18,12 +19,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.concurrent.Volatile
 
 class ServerTransport(private val client: HttpClient, private val url: String) : Transport {
     private val _connected = MutableStateFlow(false)
     private val _presence = MutableStateFlow(emptyList<Peer>())
     private val _frames = MutableSharedFlow<ByteArray>(extraBufferCapacity = BUFFER, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     private val outbox = Channel<ByteArray>(BUFFER, BufferOverflow.DROP_OLDEST)
+    @Volatile private var socket: DefaultClientWebSocketSession? = null
 
     override val connected = _connected.asStateFlow()
     override val presence = _presence.asStateFlow()
@@ -31,6 +34,11 @@ class ServerTransport(private val client: HttpClient, private val url: String) :
 
     override fun send(frame: ByteArray) {
         if (_connected.value) outbox.trySend(frame)
+    }
+
+    override suspend fun sendNow(frame: ByteArray): Boolean {
+        val open = socket ?: return false
+        return runCatching { open.send(Frame.Binary(true, frame)); open.flush() }.isSuccess
     }
 
     override suspend fun run(): Nothing {
@@ -51,6 +59,7 @@ class ServerTransport(private val client: HttpClient, private val url: String) :
 
     private suspend fun connectOnce() = client.webSocket(url) {
         while (outbox.tryReceive().isSuccess) Unit
+        socket = this
         _connected.value = true
         val writer = launch { for (frame in outbox) send(Frame.Binary(true, frame)) }
         try {
@@ -60,6 +69,7 @@ class ServerTransport(private val client: HttpClient, private val url: String) :
                 else -> Unit
             }
         } finally {
+            socket = null
             writer.cancel()
         }
     }

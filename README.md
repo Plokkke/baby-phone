@@ -61,7 +61,7 @@ The server that connects them relays encrypted bytes it cannot read, stores noth
 - **Audibility check**: media and alarm volumes, total-silence mode, disabled notifications — with one-tap fixes.
 
 ### 🚨 Safety nets
-- **Lost-link alarm**: looping alarm sound, vibration and a high-priority notification, even with the app in the background. It arms itself once the baby's phone has been heard, so starting the parents first never rings.
+- **Lost-link alarm**: looping alarm sound, vibration and a high-priority notification, even with the app in the background. It arms itself once the baby's phone has been heard, so starting the parents first never rings. A baby's phone stopped on purpose says goodbye and simply leaves the list; only a silent loss rings.
 - **Automatic reconnection** of every device, forever, every 2 s.
 - **Remote threshold** always reflects what the baby's phone actually applies.
 

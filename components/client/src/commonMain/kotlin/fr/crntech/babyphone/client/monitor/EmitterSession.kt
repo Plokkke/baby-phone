@@ -14,9 +14,14 @@ import fr.crntech.babyphone.shared.Role
 import fr.crntech.babyphone.shared.SoundGate
 import fr.crntech.babyphone.shared.Threshold
 import fr.crntech.babyphone.shared.Timing
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,9 +30,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.updateAndGet
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.concurrent.Volatile
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
 class EmitterSession(
@@ -68,14 +75,29 @@ class EmitterSession(
         val silencedHere = quietMode.state.value.let { it.controllable && !it.enabled }
         if (silencedHere) quietMode.setEnabled(true)
         try {
-            monitor()
+            connected { monitor() }
         } finally {
             if (silencedHere) quietMode.setEnabled(false)
         }
     }
 
+    /**
+     * Keeps the connection out of the session's cancellation, so that being stopped on purpose can still
+     * tell the parents before closing. A failure, a crash or a lost network says nothing: their alarm rings.
+     */
+    private suspend fun connected(block: suspend () -> Unit) {
+        val connection = CoroutineScope(currentCoroutineContext().minusKey(Job)).launch { link.run() }
+        try {
+            block()
+        } catch (e: CancellationException) {
+            withContext(NonCancellable) { withTimeoutOrNull(FAREWELL_TIMEOUT) { link.sendNow(PeerMessage.Leaving) } }
+            throw e
+        } finally {
+            connection.cancel()
+        }
+    }
+
     private suspend fun monitor(): Unit = coroutineScope {
-        launch { link.run() }
         launch { link.connected.collect { c -> _state.update { it.copy(connected = c) } } }
         launch { link.presence.collect { peers -> _state.update { s -> s.copy(receivers = peers.count { it.role == Role.RECEIVER }) } } }
         launch { receive() }
@@ -116,7 +138,7 @@ class EmitterSession(
                     settings.setThreshold(db)
                 }
                 PeerMessage.ForceListen -> forcedUntil = clock.markNow() + Timing.FORCE_LISTEN_TTL
-                is PeerMessage.EmitterStatus, is PeerMessage.Intercom -> Unit
+                is PeerMessage.EmitterStatus, is PeerMessage.Intercom, PeerMessage.Leaving -> Unit
             }
         }
     }
@@ -146,5 +168,6 @@ class EmitterSession(
     private companion object {
         /** Bridges network jitter between voice frames, so the microphone is not switched back and forth. */
         val VOICE_GRACE = 500.milliseconds
+        val FAREWELL_TIMEOUT = 1.seconds
     }
 }

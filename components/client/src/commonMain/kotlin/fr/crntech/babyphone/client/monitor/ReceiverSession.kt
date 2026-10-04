@@ -133,6 +133,7 @@ class ReceiverSession(
             val now = TimeSource.Monotonic.markNow()
             when (message) {
                 is PeerMessage.EmitterStatus -> updateBaby(from) { it.copy(status = message, lastHeard = now) }
+                PeerMessage.Leaving -> _state.update { s -> s.copy(babies = s.babies.filterNot { it.deviceId == from }) }
                 is PeerMessage.Audio -> speakers.play(from, message.pcm)
                 is PeerMessage.Intercom -> {
                     speakers.play(from, message.pcm)

@@ -13,6 +13,9 @@ interface Transport {
     /** Best effort: frames are dropped while disconnected, stale audio is worthless. */
     fun send(frame: ByteArray)
 
+    /** Writes [frame] right away on the open connection, bypassing the outbox; false when disconnected. */
+    suspend fun sendNow(frame: ByteArray): Boolean
+
     /** Keeps the link up, reconnecting forever until cancelled. */
     suspend fun run(): Nothing
 }

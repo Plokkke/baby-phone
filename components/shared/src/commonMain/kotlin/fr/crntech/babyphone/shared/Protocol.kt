@@ -57,6 +57,11 @@ sealed interface PeerMessage {
     @Serializable
     @SerialName("force")
     data object ForceListen : PeerMessage
+
+    /** The emitter stops on purpose: the parents forget it instead of raising the lost-link alarm. */
+    @Serializable
+    @SerialName("leaving")
+    data object Leaving : PeerMessage
 }
 
 @Serializable
