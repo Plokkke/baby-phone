@@ -90,7 +90,7 @@ class EmitterSession(
         try {
             block()
         } catch (e: CancellationException) {
-            withContext(NonCancellable) { withTimeoutOrNull(FAREWELL_TIMEOUT) { link.sendNow(PeerMessage.Leaving) } }
+            withContext(NonCancellable) { withTimeoutOrNull(FAREWELL_TIMEOUT) { link.sendLast(PeerMessage.Leaving) } }
             throw e
         } finally {
             connection.cancel()

@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlin.concurrent.Volatile
 
@@ -27,6 +29,7 @@ class ServerTransport(private val client: HttpClient, private val url: String) :
     private val _frames = MutableSharedFlow<ByteArray>(extraBufferCapacity = BUFFER, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     private val outbox = Channel<ByteArray>(BUFFER, BufferOverflow.DROP_OLDEST)
     @Volatile private var socket: DefaultClientWebSocketSession? = null
+    @Volatile private var writer: Job? = null
 
     override val connected = _connected.asStateFlow()
     override val presence = _presence.asStateFlow()
@@ -36,8 +39,9 @@ class ServerTransport(private val client: HttpClient, private val url: String) :
         if (_connected.value) outbox.trySend(frame)
     }
 
-    override suspend fun sendNow(frame: ByteArray): Boolean {
+    override suspend fun sendLast(frame: ByteArray): Boolean {
         val open = socket ?: return false
+        writer?.cancelAndJoin()
         return runCatching { open.send(Frame.Binary(true, frame)); open.flush() }.isSuccess
     }
 
@@ -61,7 +65,7 @@ class ServerTransport(private val client: HttpClient, private val url: String) :
         while (outbox.tryReceive().isSuccess) Unit
         socket = this
         _connected.value = true
-        val writer = launch { for (frame in outbox) send(Frame.Binary(true, frame)) }
+        writer = launch { for (frame in outbox) send(Frame.Binary(true, frame)) }
         try {
             for (frame in incoming) when (frame) {
                 is Frame.Binary -> _frames.emit(frame.readBytes())
@@ -70,7 +74,7 @@ class ServerTransport(private val client: HttpClient, private val url: String) :
             }
         } finally {
             socket = null
-            writer.cancel()
+            writer?.cancel()
         }
     }
 

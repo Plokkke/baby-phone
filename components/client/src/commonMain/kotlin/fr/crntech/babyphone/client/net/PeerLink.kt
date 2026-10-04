@@ -16,8 +16,8 @@ class PeerLink(private val transport: Transport, private val codec: PeerCodec, v
 
     suspend fun send(message: PeerMessage, to: String? = null) = transport.send(codec.encode(Envelope(self, to, message)))
 
-    /** Last words before closing: written immediately instead of queued. */
-    suspend fun sendNow(message: PeerMessage) = transport.sendNow(codec.encode(Envelope(self, message = message)))
+    /** Last words before closing: written immediately, and nothing queued follows them. */
+    suspend fun sendLast(message: PeerMessage) = transport.sendLast(codec.encode(Envelope(self, message = message)))
 
     suspend fun run(): Nothing = transport.run()
 }
