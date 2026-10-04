@@ -15,16 +15,19 @@ import fr.crntech.babyphone.shared.Role
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import org.w3c.notifications.Notification
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
-    val container = AppContainer(browserPlatform())
-    lateinit var viewModel: AppViewModel
-    val monitor = BrowserMonitorController(container, MainScope()) { viewModel.notify(Notice.MICROPHONE_REQUIRED) }
-    viewModel = AppViewModel(container, monitor)
-    pairFromUrl(viewModel)
-    ComposeViewport(document.body!!) { App(viewModel, BrowserPlatformUi) }
+    MainScope().launch {
+        val container = AppContainer(browserPlatform())
+        lateinit var viewModel: AppViewModel
+        val monitor = BrowserMonitorController(container, MainScope()) { viewModel.notify(Notice.MICROPHONE_REQUIRED) }
+        viewModel = AppViewModel(container, monitor)
+        pairFromUrl(viewModel)
+        ComposeViewport(document.body!!) { App(viewModel, BrowserPlatformUi) }
+    }
 }
 
 /** `/pair#s=…` redirects here with its fragment: join that pairing, then wipe the secret from the address bar. */
