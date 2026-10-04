@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Debug builds may target a relay on the local network over plain HTTP (infrastructure/local). -->
+    <application android:usesCleartextTraffic="true" />
+</manifest>
