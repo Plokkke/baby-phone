@@ -36,6 +36,7 @@ import fr.crntech.babyphone.client.platform.LocalPlatformUi
 import fr.crntech.babyphone.shared.Role
 import fr.crntech.babyphone.client.ui.Palette
 import fr.crntech.babyphone.client.ui.components.MicrophoneCheck
+import fr.crntech.babyphone.client.ui.components.PairingActions
 import fr.crntech.babyphone.client.ui.components.QuietToggle
 import fr.crntech.babyphone.client.ui.components.RoleIcon
 
@@ -43,7 +44,7 @@ private val dim = Color(0xFF3A3F4B)
 
 /** Nearly black, dimmed screen: it sits in the baby's room all night. */
 @Composable
-fun EmitterScreen(session: EmitterSession, onStop: () -> Unit) {
+fun EmitterScreen(session: EmitterSession, link: String, onStop: () -> Unit) {
     val state by session.state.collectAsStateWithLifecycle()
     val quiet by session.quiet.collectAsStateWithLifecycle()
     LocalPlatformUi.current.NightScreen()
@@ -52,6 +53,8 @@ fun EmitterScreen(session: EmitterSession, onStop: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
     ) {
+        PairingActions(link, tint = dim)
+        Box(Modifier.weight(1f))
         RoleIcon(Role.EMITTER, Modifier.size(72.dp), tint = dim)
         Text(stringResource(Res.string.emitter_active), color = dim)
         Text(

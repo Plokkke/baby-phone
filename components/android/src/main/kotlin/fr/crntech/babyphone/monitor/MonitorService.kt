@@ -56,7 +56,6 @@ class MonitorService : Service() {
 
     override fun onDestroy() {
         scope.cancel()
-        MonitorHub.publish(null)
         if (wakeLock.isHeld) wakeLock.release()
         if (wifiLock.isHeld) wifiLock.release()
         super.onDestroy()
@@ -75,6 +74,10 @@ class MonitorService : Service() {
                 Toast.makeText(this@MonitorService, R.string.monitor_failed, Toast.LENGTH_LONG).show()
                 stopSelf()
             }
+        } finally {
+            // Only once the session has really ended: the home screen then rejoins the room with the same
+            // device id, which would replace this connection before the emitter's goodbye went out.
+            MonitorHub.publish(null)
         }
     }
 

@@ -52,14 +52,16 @@ The server that connects them relays encrypted bytes it cannot read, stores noth
 - Survives the screen being off: foreground service, wake lock, low-latency Wi-Fi lock.
 
 ### 👥 Parent side (receiver)
-- **Live level meter** with the trigger threshold, "Quiet" / "Sound detected" at a glance.
+- **One card per baby**: several babies' phones can be followed at once.
+- **Live level meter with the threshold on the same bar**: drag the handle to set it; the baby's phone shows the same bar, read-only.
 - **Hold to listen live**, bypassing the threshold only while pressed.
-- **Talk back** to the baby, time-boxed and impossible to forget (the whole screen turns red).
+- **Push-to-talk** to one baby, in **full duplex**: the baby's phone keeps streaming through an echo-cancelled microphone, so the parent still hears the baby while talking.
+- **The other parents**: who is listening, who is speaking, and push-to-talk between parents.
 - **Status of the baby's phone**: online, battery level and charging, do-not-disturb active or not.
 - **Audibility check**: media and alarm volumes, total-silence mode, disabled notifications — with one-tap fixes.
 
 ### 🚨 Safety nets
-- **Lost-link alarm**: looping alarm sound, vibration and a high-priority notification, even with the app in the background. It arms itself once the baby's phone has been heard, so starting the parents first never rings.
+- **Lost-link alarm**: looping alarm sound, vibration and a high-priority notification, even with the app in the background. It arms itself once the baby's phone has been heard, so starting the parents first never rings. A baby's phone stopped on purpose says goodbye and simply leaves the list; only a silent loss rings.
 - **Automatic reconnection** of every device, forever, every 2 s.
 - **Remote threshold** always reflects what the baby's phone actually applies.
 
@@ -72,7 +74,7 @@ flowchart LR
     C --> D["👶🌙 Near the baby"]
     C --> E["👥💬 With the parents"]
     D --> F[Black screen · DND on · listening]
-    E --> G[Meter · hold to listen · talk back]
+    E --> G[Baby cards · hold to listen · push-to-talk]
 ```
 
 Three taps, no account, no typing. Behind the scan:
@@ -171,7 +173,7 @@ flowchart BT
 |---|---|---|
 | Pairing | A room id: `HMAC-SHA256(secret, "room")` | The secret, which lives in the URL **fragment** (never sent over HTTP) |
 | Audio | Encrypted frames, their size and timing | Any sample or level |
-| Controls | Small encrypted frames and their direction | Which command, which threshold |
+| Controls | Small encrypted frames and their direction | Which command, which threshold, which device it is for (sender and recipient travel inside the encryption) |
 | Devices | A random device id, model name and role (for presence) | Accounts, phone numbers, locations |
 | Storage | — | Everything: rooms live in memory and disappear with their last device |
 
@@ -211,7 +213,8 @@ flowchart LR
 | Status heartbeat | every 250 ms | Smooth level meter, fast failure detection |
 | Lost-link alarm | 10 s without status | Tolerates a Wi-Fi hiccup, not a dead phone |
 | Hold to listen | keep-alive 500 ms, expires after 1.5 s | Releasing the finger or losing the link closes the gate |
-| Talk-back | 60 s maximum, 300 ms echo guard | Never left open by mistake; no feedback loop |
+| Push-to-talk | while pressed, 60 s maximum | Never left open by mistake |
+| Duplex talk-back | echo-cancelled microphone while a parent's voice plays, 500 ms grace | The parent keeps hearing the baby, not their own voice |
 | Playback latency | capped at 0.5 s | Late audio is dropped rather than queued |
 
 ## Reliability

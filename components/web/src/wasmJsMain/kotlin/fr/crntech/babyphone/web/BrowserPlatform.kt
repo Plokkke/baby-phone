@@ -14,9 +14,12 @@ import fr.crntech.babyphone.client.platform.SoundOutputState
 import fr.crntech.babyphone.client.resources.Res
 import fr.crntech.babyphone.client.resources.alarm_text
 import fr.crntech.babyphone.client.resources.alarm_title
+import fr.crntech.babyphone.shared.Endpoints
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.js.Js
 import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
 import kotlinx.browser.localStorage
 import kotlinx.browser.window
 import kotlinx.coroutines.Job
@@ -26,6 +29,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.jetbrains.compose.resources.getString
 import org.w3c.notifications.GRANTED
 import org.w3c.notifications.Notification
@@ -34,10 +40,22 @@ import org.w3c.notifications.NotificationPermission
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
-fun browserPlatform() = Platform(
+/** The web client ships inside the relay, so the relay's version is this client's version. */
+suspend fun browserPlatform(): Platform {
+    val httpClient = HttpClient(Js) { install(WebSockets) }
+    return browserPlatform(httpClient, servedVersion(httpClient))
+}
+
+private suspend fun servedVersion(client: HttpClient): String? = runCatching {
+    val health = client.get(window.location.origin + Endpoints.HEALTH_PATH).bodyAsText()
+    Json.parseToJsonElement(health).jsonObject["version"]?.jsonPrimitive?.content
+}.getOrNull()
+
+private fun browserPlatform(httpClient: HttpClient, appVersion: String?) = Platform(
     publicUrl = window.location.origin,
     deviceName = "Navigateur (${window.navigator.platform})",
-    httpClient = HttpClient(Js) { install(WebSockets) },
+    appVersion = appVersion,
+    httpClient = httpClient,
     storage = LocalStorage,
     microphone = BrowserMicrophone,
     speaker = ::BrowserSpeaker,

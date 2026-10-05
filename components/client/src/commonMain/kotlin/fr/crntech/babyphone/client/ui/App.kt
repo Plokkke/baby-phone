@@ -55,10 +55,10 @@ private fun Screens(viewModel: AppViewModel, platformUi: PlatformUi) {
 
     when (val current = screen) {
         is Screen.Pairing -> PairingScreen(current.link, onScan = scan)
-        is Screen.Home -> HomeScreen(current.link, current.peers, startRole, scan, viewModel::resetPairing)
+        is Screen.Home -> HomeScreen(current.link, current.peers, startRole, viewModel::resetPairing, viewModel.appVersion)
         is Screen.Monitoring -> when (val session = current.session) {
-            is EmitterSession -> EmitterScreen(session, viewModel::stop)
-            is ReceiverSession -> ReceiverScreen(session, viewModel::stop)
+            is EmitterSession -> EmitterScreen(session, current.link, viewModel::stop)
+            is ReceiverSession -> ReceiverScreen(session, current.link, viewModel::stop)
         }
     }
 }

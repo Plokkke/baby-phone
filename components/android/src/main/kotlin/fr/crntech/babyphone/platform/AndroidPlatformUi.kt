@@ -1,6 +1,7 @@
 package fr.crntech.babyphone.platform
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipDescription
 import android.content.ClipboardManager
@@ -42,6 +43,8 @@ object AndroidPlatformUi : PlatformUi {
         }
     }
 
+    /** The sensitive flag is an extra older Android versions simply ignore. */
+    @SuppressLint("InlinedApi")
     @Composable
     override fun rememberCopier(): (String) -> Unit {
         val context = LocalContext.current

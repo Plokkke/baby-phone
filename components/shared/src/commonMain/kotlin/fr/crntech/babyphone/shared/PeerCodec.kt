@@ -13,12 +13,12 @@ import kotlinx.serialization.cbor.Cbor
 @OptIn(ExperimentalSerializationApi::class)
 class PeerCodec private constructor(private val cipher: IvAuthenticatedCipher) {
 
-    suspend fun encode(message: PeerMessage): ByteArray =
-        cipher.encrypt(CBOR.encodeToByteArray(PeerMessage.serializer(), message))
+    suspend fun encode(envelope: Envelope): ByteArray =
+        cipher.encrypt(CBOR.encodeToByteArray(Envelope.serializer(), envelope))
 
     /** Returns null for frames that are malformed or not sealed with this pairing's key. */
-    suspend fun decode(frame: ByteArray): PeerMessage? = runCatching {
-        CBOR.decodeFromByteArray(PeerMessage.serializer(), cipher.decrypt(frame))
+    suspend fun decode(frame: ByteArray): Envelope? = runCatching {
+        CBOR.decodeFromByteArray(Envelope.serializer(), cipher.decrypt(frame))
     }.getOrNull()
 
     companion object {

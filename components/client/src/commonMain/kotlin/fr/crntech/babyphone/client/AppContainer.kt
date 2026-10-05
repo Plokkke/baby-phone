@@ -17,13 +17,14 @@ import fr.crntech.babyphone.shared.Role
 /** Manual dependency wiring. The transport is picked here, so a LAN transport can slot in later. */
 class AppContainer(private val platform: Platform) {
     val settings = SettingsStore(platform.storage)
+    val appVersion = platform.appVersion
 
     fun pairingLink(secret: PairingSecret) = PairingLink.build(platform.publicUrl, secret)
 
     suspend fun peerLink(secret: PairingSecret, deviceId: String, role: Role): PeerLink {
         val self = Peer(deviceId, platform.deviceName, role)
         val url = Endpoints.roomSocket(platform.publicUrl, secret.roomId(), self)
-        return PeerLink(ServerTransport(platform.httpClient, url), PeerCodec.create(secret))
+        return PeerLink(ServerTransport(platform.httpClient, url), PeerCodec.create(secret), deviceId)
     }
 
     suspend fun createSession(role: Role): MonitorSession {

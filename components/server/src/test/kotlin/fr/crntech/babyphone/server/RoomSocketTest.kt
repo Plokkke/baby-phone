@@ -67,13 +67,16 @@ class RoomSocketTest {
     }
 
     @Test
-    fun `receiver frames reach the emitter`() = serverTest { client ->
+    fun `receiver frames reach the emitters and the other receivers, not the sender`() = serverTest { client ->
         val emitter = client.join("baby", Role.EMITTER)
         val receiver = client.join("parent", Role.RECEIVER)
-        receiver.awaitPeers(2)
+        val otherReceiver = client.join("other-parent", Role.RECEIVER)
+        receiver.awaitPeers(3)
 
         receiver.send(byteArrayOf(9))
         assertContentEquals(byteArrayOf(9), emitter.nextBinary())
+        assertContentEquals(byteArrayOf(9), otherReceiver.nextBinary())
+        assertNull(receiver.nextBinary())
     }
 
     @Test

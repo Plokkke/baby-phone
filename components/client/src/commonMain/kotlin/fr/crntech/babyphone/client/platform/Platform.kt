@@ -86,6 +86,8 @@ interface KeyValueStorage {
 class Platform(
     val publicUrl: String,
     val deviceName: String,
+    /** Shown to tell builds apart while testing; null when the platform does not know it. */
+    val appVersion: String?,
     val httpClient: HttpClient,
     val storage: KeyValueStorage,
     val microphone: Microphone,

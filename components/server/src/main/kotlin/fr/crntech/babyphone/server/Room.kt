@@ -48,7 +48,7 @@ class Room {
     }
 
     fun relay(from: Member, payload: ByteArray) = members.values
-        .filter { it.peer.role in from.peer.role.audience }
+        .filter { it !== from && it.peer.role in from.peer.role.audience }
         .forEach { it.offer(Frame.Binary(true, payload)) }
 
     private fun publishPresence() {

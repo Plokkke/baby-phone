@@ -8,14 +8,21 @@ import kotlinx.serialization.json.Json
 enum class Role {
     IDLE, EMITTER, RECEIVER;
 
-    /** Roles that receive the frames sent by this role. */
+    /** Roles that receive the frames sent by this role; parents also hear each other. */
     val audience: Set<Role>
         get() = when (this) {
             EMITTER -> setOf(RECEIVER)
-            RECEIVER -> setOf(EMITTER)
+            RECEIVER -> setOf(EMITTER, RECEIVER)
             IDLE -> emptySet()
         }
 }
+
+/**
+ * What travels end-to-end encrypted: sender and recipient stay hidden from the server.
+ * A null [to] addresses every device the sender's role reaches.
+ */
+@Serializable
+data class Envelope(val from: String, val to: String? = null, val message: PeerMessage)
 
 /** End-to-end encrypted messages between devices. The server relays them as opaque bytes. */
 @Serializable
@@ -32,10 +39,15 @@ sealed interface PeerMessage {
         val quiet: Boolean? = null,
     ) : PeerMessage
 
-    /** 16-bit little-endian mono PCM, see [AudioSpec]. */
+    /** Baby sound, or a parent talking to one baby. 16-bit little-endian mono PCM, see [AudioSpec]. */
     @Serializable
     @SerialName("audio")
     class Audio(val pcm: ByteArray) : PeerMessage
+
+    /** A parent talking to the other parents; babies ignore it. Same format as [Audio]. */
+    @Serializable
+    @SerialName("intercom")
+    class Intercom(val pcm: ByteArray) : PeerMessage
 
     @Serializable
     @SerialName("threshold")
@@ -45,6 +57,11 @@ sealed interface PeerMessage {
     @Serializable
     @SerialName("force")
     data object ForceListen : PeerMessage
+
+    /** The emitter stops on purpose: the parents forget it instead of raising the lost-link alarm. */
+    @Serializable
+    @SerialName("leaving")
+    data object Leaving : PeerMessage
 }
 
 @Serializable

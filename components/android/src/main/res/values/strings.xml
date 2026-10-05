@@ -4,12 +4,12 @@
     <string name="app_name">Baby Phone</string>
     <string name="monitor_failed">La surveillance s\'est arrêtée (micro indisponible ?)</string>
 
-    <string name="alarm_title">Liaison perdue avec le bébé</string>
-    <string name="alarm_text">Vérifiez l\'appareil du bébé et la connexion.</string>
+    <string name="alarm_title">Liaison perdue avec l\'enfant</string>
+    <string name="alarm_text">Vérifiez l\'appareil de l\'enfant et la connexion.</string>
 
     <string name="notif_channel_monitor">Surveillance</string>
     <string name="notif_channel_alarm">Alertes</string>
-    <string name="notif_emitter">Surveillance du bébé active</string>
-    <string name="notif_receiver">À l\'écoute du bébé</string>
+    <string name="notif_emitter">Surveillance de l\'enfant active</string>
+    <string name="notif_receiver">À l\'écoute de l\'enfant</string>
     <string name="notif_stop">Arrêter</string>
 </resources>
