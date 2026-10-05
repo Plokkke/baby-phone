@@ -274,6 +274,8 @@ flowchart LR
 ./gradlew :android:installDebug               # Android app on a USB-connected phone
 ```
 
+**Testing on phones without releasing**: `infrastructure/local/run.sh` installs a debug app pointing at a relay on this computer, on every phone adb sees (USB or wireless), then starts that relay. Phones only need the same Wi-Fi. Debug builds accept plain HTTP for this; release builds do not. Browsers only grant the microphone to `localhost` or HTTPS, so the web client is used from this computer at `http://localhost:8080/web/`, joining with a pairing link shared from a phone (its host can be swapped for `localhost`).
+
 Requirements: JDK 21 and an Android SDK (`local.properties` → `sdk.dir`). The public URL is configured once, in `gradle.properties` (`babyphone.publicUrl`): QR links, App Links and the WebSocket endpoint all derive from it.
 
 <details>
