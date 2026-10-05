@@ -22,6 +22,7 @@ import androidx.core.content.getSystemService
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
+import fr.crntech.babyphone.BuildConfig
 import fr.crntech.babyphone.client.platform.PlatformUi
 import fr.crntech.babyphone.shared.Role
 
@@ -85,6 +86,8 @@ object AndroidPlatformUi : PlatformUi {
 
     @Composable
     override fun NightScreen() {
+        // Debug builds are tested in daylight: keep the screen readable.
+        if (BuildConfig.DEBUG) return
         val window = LocalActivity.current?.window ?: return
         DisposableEffect(window) {
             val previous = window.attributes.screenBrightness
