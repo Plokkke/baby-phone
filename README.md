@@ -53,17 +53,17 @@ The server that connects them relays encrypted bytes it cannot read, stores noth
 
 ### 👥 Parent side (receiver)
 - **One card per baby**: several babies' phones can be followed at once.
-- **Live level meter with the threshold on the same bar**: drag the handle to set it; the baby's phone shows the same bar, read-only.
+- **Live level meter with the threshold on the same bar**: drag the handle to set it; the child's device shows the same bar, read-only.
 - **Hold to listen live**, bypassing the threshold only while pressed.
-- **Push-to-talk** to one baby, in **full duplex**: the baby's phone keeps streaming through an echo-cancelled microphone, so the parent still hears the baby while talking.
+- **Push-to-talk** to one baby, in **full duplex**: the child's device keeps streaming through an echo-cancelled microphone, so the parent still hears the baby while talking.
 - **The other parents**: who is listening, who is speaking, and push-to-talk between parents.
-- **Status of the baby's phone**: online, battery level and charging, do-not-disturb active or not.
+- **Status of each child's device**: online, battery level and charging, do-not-disturb active or not.
 - **Audibility check**: media and alarm volumes, total-silence mode, disabled notifications — with one-tap fixes.
 
 ### 🚨 Safety nets
-- **Lost-link alarm**: looping alarm sound, vibration and a high-priority notification, even with the app in the background. It arms itself once the baby's phone has been heard, so starting the parents first never rings. A baby's phone stopped on purpose says goodbye and simply leaves the list; only a silent loss rings.
+- **Lost-link alarm**: looping alarm sound, vibration and a high-priority notification, even with the app in the background. It arms itself once a child's device has been heard, so starting the parents first never rings. A child's device stopped on purpose says goodbye and simply leaves the list; only a silent loss rings.
 - **Automatic reconnection** of every device, forever, every 2 s.
-- **Remote threshold** always reflects what the baby's phone actually applies.
+- **Remote threshold** always reflects what the child's device actually applies.
 
 ## The user flow
 
@@ -74,7 +74,7 @@ flowchart LR
     C --> D["👶🌙 Near the baby"]
     C --> E["👥💬 With the parents"]
     D --> F[Black screen · DND on · listening]
-    E --> G[Baby cards · hold to listen · push-to-talk]
+    E --> G[Child cards · hold to listen · push-to-talk]
 ```
 
 Three taps, no account, no typing. Behind the scan:
@@ -231,7 +231,7 @@ flowchart LR
 |---|:---:|:---:|
 | Emitter / receiver | ✅ / ✅ | ✅ / ✅ |
 | Show / scan pairing QR | ✅ / ✅ system camera & in-app | ✅ / ✅ webcam |
-| Talk back · hold to listen | ✅ | ✅ |
+| Push-to-talk · hold to listen · parents intercom | ✅ | ✅ |
 | Lost-link alarm in background | ✅ alarm + notification | ✅ beeps + notification |
 | Do-not-disturb control | ✅ in-app switch | — OS-level, out of a page's reach |
 | Volume check | ✅ media & alarm volumes | Autoplay & notification checks, test chime |
