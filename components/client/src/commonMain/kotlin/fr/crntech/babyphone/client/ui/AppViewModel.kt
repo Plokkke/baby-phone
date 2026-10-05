@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 sealed interface Screen {
     data class Pairing(val link: String) : Screen
     data class Home(val link: String, val peers: List<Peer>) : Screen
-    data class Monitoring(val session: MonitorSession) : Screen
+    data class Monitoring(val session: MonitorSession, val link: String) : Screen
 }
 
 enum class Notice { INVALID_PAIRING_LINK, MICROPHONE_REQUIRED }
@@ -37,7 +37,7 @@ class AppViewModel(private val container: AppContainer, private val monitor: Mon
     val screen = combine(settings.data, monitor.session, otherPeers) { current, session, peers ->
         val link = container.pairingLink(current.secret)
         when {
-            session != null -> Screen.Monitoring(session)
+            session != null -> Screen.Monitoring(session, link)
             !current.paired -> Screen.Pairing(link)
             else -> Screen.Home(link, peers)
         }
