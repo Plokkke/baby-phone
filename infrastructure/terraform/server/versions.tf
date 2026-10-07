@@ -8,18 +8,13 @@ terraform {
     }
   }
 
-  # State lives in the Postgres started by infrastructure/bootstrap. Connection: PG_CONN_STR env var.
+  # State lives in the home server's shared Postgres; the deployer provides PG_CONN_STR.
   backend "pg" {
     schema_name = "babyphone_server"
   }
 }
 
+# The image is public: no registry credentials.
 provider "docker" {
   host = var.docker_host
-
-  registry_auth {
-    address  = "ghcr.io"
-    username = var.registry_username
-    password = var.registry_password
-  }
 }

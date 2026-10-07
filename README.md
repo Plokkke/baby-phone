@@ -190,7 +190,7 @@ Hosting the relay yourself (as this project does on a Raspberry Pi) keeps even t
 - Android backups and device transfers **exclude** the pairing secret and device id.
 - Pairing links opened in a browser are **wiped from the address bar** once consumed.
 - Only verified App Links (`assetlinks.json` with the signing certificates) can open pairing URLs in the app.
-- The public repository's CI never runs untrusted code on the Pi: PR workflows use GitHub-hosted runners, fork runs need approval, and the `production` environment only deploys from `main`.
+- The public repository's CI never runs code on the Pi: workflows only *request* deployments, and the Pi's deployer applies tags and `main` commits only.
 
 ## Audio pipeline
 
@@ -247,14 +247,14 @@ flowchart LR
     CI -->|squash merge| SR["semantic-release<br/><sub>vX.Y.Z · GitHub release</sub>"]
     SR --> IMG["Multi-arch image<br/><sub>arm64 + amd64 → GHCR</sub>"]
     SR --> PLAY["Google Play<br/><sub>internal track</sub>"]
-    IMG --> DEP["🍓 Self-hosted runner<br/><sub>terraform apply</sub>"]
-    DEP --> SMOKE["Smoke test<br/><sub>/health == version</sub>"]
+    IMG --> REQ["Deployment request<br/><sub>GitHub Deployments API</sub>"]
+    REQ --> DEP["🍓 Deployer on the Pi<br/><sub>terraform apply · /health</sub>"]
 ```
 
 - **Every PR** is validated on GitHub-hosted runners; its title follows Conventional Commits because it becomes the squash commit.
 - **Every merge** to `main` that contains a `feat`, `fix` or `perf` is released with a semantic version and deployed.
 - The fat jar is built **once** (architecture-independent) and wrapped into an arm64 image without emulated compilation; it embeds the web client.
-- **Terraform** manages the container on the Raspberry Pi through the Docker API, from a runner living on the Pi itself — no inbound port, no SSH.
+- **Terraform** manages the container on the Raspberry Pi through the Docker API. The Pi's deployer polls deployment requests and applies them — no runner, no inbound port, no SSH, no deployment secret in GitHub.
 - Terraform state lives in a **Postgres** backend on the Pi, one schema per stack.
 - A second Terraform stack provisions the **Google Play** publisher (API, service account, GitHub secret); Gradle Play Publisher uploads signed bundles to the internal track.
 - Versions flow from the tag into the APK (`versionName`, monotonic `versionCode`) and into the server (`/health`).
@@ -295,7 +295,7 @@ Requirements: JDK 21 and an Android SDK (`local.properties` → `sdk.dir`). The 
 <details>
 <summary><b>Deployment</b></summary>
 
-One-time setup of the Raspberry Pi (state database, runner, nginx) in [`knowledge/delivery.md`](knowledge/delivery.md), Play Store onboarding in [`knowledge/play-store.md`](knowledge/play-store.md), design notes in [`knowledge/architecture.md`](knowledge/architecture.md).
+Delivery, deployment and rollback in [`knowledge/delivery.md`](knowledge/delivery.md), Play Store onboarding in [`knowledge/play-store.md`](knowledge/play-store.md), design notes in [`knowledge/architecture.md`](knowledge/architecture.md).
 
 </details>
 
@@ -310,9 +310,7 @@ components/
 └── web/         Browser shell: Wasm entry point, Web Audio, webcam scanner
 infrastructure/
 ├── docker/      Runtime image
-├── terraform/   server (Docker on the Pi) · play (Google Play publisher)
-├── bootstrap/   Terraform state database
-└── nginx/       Reverse proxy site
+└── terraform/   server (Docker + HTTPS site on the Pi) · play (Google Play publisher)
 knowledge/       Architecture, delivery and Play Store notes
 .github/         CI, release and deployment workflows
 ```

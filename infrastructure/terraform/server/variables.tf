@@ -1,26 +1,29 @@
 variable "image_repository" {
-  description = "Server image repository, e.g. ghcr.io/owner/baby-phone-server"
+  description = "Server image repository"
   type        = string
+  default     = "ghcr.io/plokkke/baby-phone-server"
 }
 
 variable "image_tag" {
   description = "Semantic version to deploy"
   type        = string
+
+  validation {
+    condition     = var.image_tag != ""
+    error_message = "image_tag is required: deploy a released version."
+  }
 }
 
 variable "docker_host" {
-  description = "Docker API endpoint; the deploy runner sits on the Raspberry Pi itself"
+  description = "Docker API endpoint; the deployer runs on the Raspberry Pi itself"
   type        = string
   default     = "unix:///var/run/docker.sock"
 }
 
-variable "registry_username" {
-  type = string
-}
-
-variable "registry_password" {
-  type      = string
-  sensitive = true
+variable "subdomain" {
+  description = "https://<subdomain>.crn-tech.fr"
+  type        = string
+  default     = "babyphone"
 }
 
 variable "host_port" {

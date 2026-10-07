@@ -36,3 +36,19 @@ resource "docker_container" "server" {
     max-file = "3"
   }
 }
+
+# HTTPS site on the host nginx (certificate included); kept as is when it already exists.
+resource "terraform_data" "site" {
+  input = { subdomain = var.subdomain, port = var.host_port }
+
+  provisioner "local-exec" {
+    command = "[ -e /etc/nginx/sites-available/${self.input.subdomain}.crn-tech.fr ] || sudo /etc/nginx/register-service.sh ${self.input.subdomain} ${self.input.port}"
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "sudo /etc/nginx/unregister-service.sh ${self.input.subdomain}"
+  }
+
+  depends_on = [docker_container.server]
+}
