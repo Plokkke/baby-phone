@@ -12,7 +12,8 @@ data class AppSettings(
     val deviceId: String,
     val secret: PairingSecret,
     val paired: Boolean,
-    val thresholdDb: Float,
+    /** Trigger margin above the room's background, see [fr.crntech.babyphone.shared.NoiseFloor]. */
+    val marginDb: Float,
 )
 
 /** Single writer of the device settings; creates the device identity and a pairing secret on first use. */
@@ -28,7 +29,7 @@ class SettingsStore(private val storage: KeyValueStorage) {
 
     fun resetPairing() = write(*newPairing())
 
-    fun setThreshold(db: Float) = write(THRESHOLD to db.toString())
+    fun setMargin(db: Float) = write(MARGIN to db.toString())
 
     @OptIn(ExperimentalUuidApi::class)
     private fun initialize(): AppSettings {
@@ -46,7 +47,7 @@ class SettingsStore(private val storage: KeyValueStorage) {
         deviceId = checkNotNull(storage.get(DEVICE_ID)),
         secret = checkNotNull(storage.get(SECRET)?.let(PairingSecret::decode)),
         paired = storage.get(PAIRED).toBoolean(),
-        thresholdDb = storage.get(THRESHOLD)?.toFloatOrNull() ?: Threshold.DEFAULT_DB,
+        marginDb = storage.get(MARGIN)?.toFloatOrNull() ?: Threshold.DEFAULT_MARGIN_DB,
     )
 
     private fun newPairing() = arrayOf(SECRET to PairingSecret.generate().encode(), PAIRED to "false")
@@ -55,6 +56,6 @@ class SettingsStore(private val storage: KeyValueStorage) {
         const val DEVICE_ID = "device_id"
         const val SECRET = "pairing_secret"
         const val PAIRED = "paired"
-        const val THRESHOLD = "threshold_db"
+        const val MARGIN = "threshold_margin_db"
     }
 }

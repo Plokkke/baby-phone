@@ -36,8 +36,11 @@ object Timing {
     val RECONNECT_DELAY = 2.seconds
 }
 
+/** The threshold is a margin above the room's [NoiseFloor]; shown on a level bar spanning [MIN_DB]..[MAX_DB]. */
 object Threshold {
-    const val MIN_DB = -70f
+    const val MIN_DB = -90f
     const val MAX_DB = -10f
-    const val DEFAULT_DB = -40f
+    const val MIN_MARGIN_DB = 6f
+    const val MAX_MARGIN_DB = 60f
+    const val DEFAULT_MARGIN_DB = 20f
 }
