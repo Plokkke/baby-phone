@@ -40,8 +40,8 @@ class PairingTest {
 
     @Test
     fun `socket url escapes peer names`() {
-        val url = Endpoints.roomSocket("https://h", "r", Peer("id", "Pixel 7 é&", Role.EMITTER))
-        assertEquals("wss://h/ws/r?device=id&name=Pixel%207%20%C3%A9%26&role=EMITTER", url)
+        val url = Endpoints.roomSocket("https://h", "r", Peer("id", "Pixel 7 é&", Role.EMITTER, 3, "1.2.3"))
+        assertEquals("wss://h/ws/r?device=id&name=Pixel%207%20%C3%A9%26&role=EMITTER&protocol=3&version=1.2.3", url)
     }
 
     @Test

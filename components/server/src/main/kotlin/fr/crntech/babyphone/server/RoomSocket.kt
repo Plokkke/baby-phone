@@ -45,5 +45,7 @@ private fun Parameters.toPeer(): Peer? {
     val deviceId = get(Endpoints.PARAM_DEVICE)?.takeIf { it.isNotBlank() } ?: return null
     val role = get(Endpoints.PARAM_ROLE)?.let { runCatching { Role.valueOf(it) }.getOrNull() } ?: return null
     val name = get(Endpoints.PARAM_NAME).orEmpty().take(MAX_NAME_LENGTH)
-    return Peer(deviceId.take(MAX_NAME_LENGTH), name, role)
+    val protocol = get(Endpoints.PARAM_PROTOCOL)?.toIntOrNull() ?: 0
+    val version = get(Endpoints.PARAM_VERSION)?.take(MAX_NAME_LENGTH)
+    return Peer(deviceId.take(MAX_NAME_LENGTH), name, role, protocol, version)
 }

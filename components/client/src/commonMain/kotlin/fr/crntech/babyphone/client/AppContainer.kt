@@ -11,6 +11,7 @@ import fr.crntech.babyphone.shared.Endpoints
 import fr.crntech.babyphone.shared.PairingLink
 import fr.crntech.babyphone.shared.PairingSecret
 import fr.crntech.babyphone.shared.Peer
+import fr.crntech.babyphone.shared.PROTOCOL_VERSION
 import fr.crntech.babyphone.shared.PeerCodec
 import fr.crntech.babyphone.shared.Role
 
@@ -22,7 +23,7 @@ class AppContainer(private val platform: Platform) {
     fun pairingLink(secret: PairingSecret) = PairingLink.build(platform.publicUrl, secret)
 
     suspend fun peerLink(secret: PairingSecret, deviceId: String, role: Role): PeerLink {
-        val self = Peer(deviceId, platform.deviceName, role)
+        val self = Peer(deviceId, platform.deviceName, role, PROTOCOL_VERSION, platform.appVersion)
         val url = Endpoints.roomSocket(platform.publicUrl, secret.roomId(), self)
         return PeerLink(ServerTransport(platform.httpClient, url), PeerCodec.create(secret), deviceId)
     }

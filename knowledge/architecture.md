@@ -44,7 +44,10 @@ hence the suspending `PeerCodec` / `PairingSecret.roomId()`. The frame format is
 - `roomId = HMAC(secret, "room")` is all the server sees. `key = HMAC(secret, "aes-gcm")`.
 - Every peer message is CBOR + AES-256-GCM with a random nonce. The server relays opaque bytes;
   it cannot listen, and it cannot forge messages (GCM tag).
-- Presence (who is connected, which role) is the only plaintext the server produces.
+- Presence (who is connected, which role, protocol and app version) is the only plaintext the server produces.
+- `PROTOCOL_VERSION` is bumped whenever devices of different versions can no longer understand each other.
+  Each device compares it with the presence: an older peer (or one announcing nothing, up to 1.0.0) is asked
+  to update, a newer one means this device must be. Older apps ignore the extra presence fields.
 - Anyone can re-scan the QR to add a receiver. "Réinitialiser l'appairage" rotates the secret.
 
 ## Routing (server)

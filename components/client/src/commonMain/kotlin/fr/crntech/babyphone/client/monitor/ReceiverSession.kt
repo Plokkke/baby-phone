@@ -70,6 +70,7 @@ class ReceiverSession(
     private val _state = MutableStateFlow(State())
     val state = _state.asStateFlow()
     val sound = soundOutput.state
+    override val presence = link.presence
 
     fun makeAudible() = soundOutput.makeAudible()
 

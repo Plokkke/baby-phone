@@ -26,6 +26,7 @@ import fr.crntech.babyphone.client.resources.role_receiver
 import fr.crntech.babyphone.client.resources.role_title
 import fr.crntech.babyphone.shared.Peer
 import fr.crntech.babyphone.shared.Role
+import fr.crntech.babyphone.client.ui.components.CompatibilityWarning
 import fr.crntech.babyphone.client.ui.components.PairingActions
 import fr.crntech.babyphone.client.ui.components.PeerList
 import fr.crntech.babyphone.client.ui.components.RoleIcon
@@ -49,6 +50,7 @@ fun HomeScreen(
                 RoleCard(Role.EMITTER, Res.string.role_emitter, onRole, Modifier.weight(1f))
                 RoleCard(Role.RECEIVER, Res.string.role_receiver, onRole, Modifier.weight(1f))
             }
+            CompatibilityWarning(peers)
             PeerList(peers)
             appVersion?.let { Text(stringResource(Res.string.app_version, it), style = MaterialTheme.typography.labelSmall, color = Color.Gray) }
         }
