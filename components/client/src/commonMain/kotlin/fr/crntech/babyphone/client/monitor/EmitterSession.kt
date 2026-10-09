@@ -7,6 +7,7 @@ import fr.crntech.babyphone.client.platform.MicMode
 import fr.crntech.babyphone.client.platform.Microphone
 import fr.crntech.babyphone.client.platform.QuietMode
 import fr.crntech.babyphone.client.platform.Speaker
+import fr.crntech.babyphone.shared.AutoGain
 import fr.crntech.babyphone.shared.Loudness
 import fr.crntech.babyphone.shared.MicrophoneHealth
 import fr.crntech.babyphone.shared.PeerMessage
@@ -114,6 +115,7 @@ class EmitterSession(
     @OptIn(ExperimentalCoroutinesApi::class)
     private suspend fun capture() {
         val gate = SoundGate()
+        val gain = AutoGain()
         parentTalking.flatMapLatest { talking ->
             microphone.frames(if (talking) MicMode.VOICE else MicMode.AMBIENT).map { it to talking }
         }.collect { (frame, talking) ->
@@ -121,7 +123,8 @@ class EmitterSession(
             peakDb = maxOf(peakDb, level)
             if (!talking) microphoneHealth.onFrame(level)
             val triggered = talking || forcedUntil.hasNotPassedNow() || level >= _state.value.thresholdDb
-            gate.process(frame, triggered).forEach { link.send(PeerMessage.Audio(it)) }
+            // Detection reads the raw level; the parents get it amplified, or they would barely hear a voice.
+            gate.process(gain.process(frame), triggered).forEach { link.send(PeerMessage.Audio(it)) }
             _state.update { it.copy(transmitting = gate.isOpen) }
         }
     }

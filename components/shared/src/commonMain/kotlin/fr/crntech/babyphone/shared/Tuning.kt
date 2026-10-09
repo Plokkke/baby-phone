@@ -16,6 +16,13 @@ object AudioSpec {
 
     /** Signed 16-bit little-endian sample. */
     fun sampleAt(pcm: ByteArray, index: Int) = (pcm[2 * index].toInt() and 0xFF) or (pcm[2 * index + 1].toInt() shl 8)
+
+    /** Writes a signed 16-bit little-endian sample, clamped to the 16-bit range. */
+    fun writeSample(pcm: ByteArray, index: Int, value: Int) {
+        val clamped = value.coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt())
+        pcm[2 * index] = clamped.toByte()
+        pcm[2 * index + 1] = (clamped shr 8).toByte()
+    }
 }
 
 object Timing {
