@@ -1,9 +1,13 @@
 package fr.crntech.babyphone.client.monitor
 
+import fr.crntech.babyphone.shared.Peer
 import fr.crntech.babyphone.shared.Role
 import kotlinx.coroutines.flow.StateFlow
 
 sealed interface MonitorSession {
+    /** Devices connected to the pairing, this one included. */
+    val presence: StateFlow<List<Peer>>
+
     /** Runs until cancelled. */
     suspend fun run()
 }

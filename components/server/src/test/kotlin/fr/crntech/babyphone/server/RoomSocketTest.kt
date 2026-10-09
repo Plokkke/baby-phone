@@ -95,6 +95,14 @@ class RoomSocketTest {
     }
 
     @Test
+    fun `presence carries each device's versions`() = serverTest { client ->
+        val receiver = client.join("parent", Role.RECEIVER)
+        client.webSocketSession(Endpoints.roomSocket("ws://localhost", room, Peer("baby", "baby", Role.EMITTER, 7, "9.9.9")))
+        val baby = receiver.awaitPeers(2).single { it.deviceId == "baby" }
+        assertEquals(7 to "9.9.9", baby.protocol to baby.version)
+    }
+
+    @Test
     fun `asset links expose the app signature`() = serverTest { client ->
         val body = client.get("/.well-known/assetlinks.json").bodyAsText()
         assertContains(body, "fr.crntech.babyphone")

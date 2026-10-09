@@ -23,6 +23,9 @@
     <string name="confirm">Confirmer</string>
     <string name="close">Fermer</string>
     <string name="app_version">Version %1$s</string>
+    <string name="compat_peer_outdated">« %1$s » doit être mis à jour pour communiquer avec cet appareil.</string>
+    <string name="compat_peer_outdated_version">« %1$s » (version %2$s) doit être mis à jour pour communiquer avec cet appareil.</string>
+    <string name="compat_self_outdated">Cet appareil doit être mis à jour pour communiquer avec « %1$s ».</string>
 
     <string name="permission_mic_required">Le micro est nécessaire pour surveiller l'enfant.</string>
 

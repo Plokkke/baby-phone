@@ -1,0 +1,10 @@
+SELECT p.oid::regprocedure, prosrc
+FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+WHERE n.nspname = 'sspm' AND p.proname = 'insertpassword';
+select * from clients where client_id = "1P260a7d9264aec9b7a962307676148903";
+\dt
+\d+
+use admin:
+;
+\schema admin
+\s admin

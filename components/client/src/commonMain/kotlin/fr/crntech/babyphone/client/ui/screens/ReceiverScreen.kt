@@ -36,6 +36,7 @@ import fr.crntech.babyphone.client.resources.receiver_stop
 import fr.crntech.babyphone.client.resources.server_connecting
 import fr.crntech.babyphone.client.ui.Palette
 import fr.crntech.babyphone.client.ui.components.BabyCard
+import fr.crntech.babyphone.client.ui.components.CompatibilityWarning
 import fr.crntech.babyphone.client.ui.components.PairingActions
 import fr.crntech.babyphone.client.ui.components.ParentsCard
 import fr.crntech.babyphone.client.ui.components.SoundCheck
@@ -47,12 +48,14 @@ import org.jetbrains.compose.resources.stringResource
 fun ReceiverScreen(session: ReceiverSession, link: String, onStop: () -> Unit) {
     val state by session.state.collectAsStateWithLifecycle()
     val sound by session.sound.collectAsStateWithLifecycle()
+    val presence by session.presence.collectAsStateWithLifecycle()
     Column(
         Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         PairingActions(link)
+        CompatibilityWarning(presence)
         if (state.linkLost) AlarmBanner(state.alarmSilenced, session::silenceAlarm)
         if (!state.connected) Text(stringResource(Res.string.server_connecting))
         SoundCheck(sound, session::makeAudible, session::playTestSound)

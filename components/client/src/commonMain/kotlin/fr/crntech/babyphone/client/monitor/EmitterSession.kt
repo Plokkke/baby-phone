@@ -60,6 +60,7 @@ class EmitterSession(
     private val _state = MutableStateFlow(State(thresholdDb = thresholdDb))
     val state = _state.asStateFlow()
     val quiet = quietMode.state
+    override val presence = link.presence
 
     fun setQuiet(enabled: Boolean) = quietMode.setEnabled(enabled)
 

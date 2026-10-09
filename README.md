@@ -220,6 +220,7 @@ flowchart LR
 ## Reliability
 
 - **Heartbeat-driven alarm**: silence and failure look the same on the wire, so the emitter always talks, even when the room is quiet.
+- **Version check**: each device announces its protocol and app version when it connects; devices that can no longer understand each other say which one to update instead of failing silently.
 - **Backpressure everywhere**: every queue is bounded and drops the *oldest* frames — stale audio is worthless, and one slow receiver never delays the others.
 - **Self-healing links**: WebSocket ping every 5 s, reconnection every 2 s, a reconnecting device replaces its previous session.
 - **Background survival on Android**: typed foreground service (microphone / media playback), partial wake lock, low-latency Wi-Fi lock.
