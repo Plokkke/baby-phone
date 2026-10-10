@@ -44,7 +44,8 @@ The server that connects them relays encrypted bytes it cannot read, stores noth
 - **Reset anytime.** Rotating the pairing secret instantly disconnects every other device.
 
 ### 👶 Baby side (emitter)
-- Sound-triggered transmission with an adjustable **threshold** (set remotely by the parents).
+- Sound-triggered transmission with an adjustable **threshold** (set remotely by the parents), kept as a **margin above the room's background noise**: microphones differ by 25 dB or more between a phone and a computer, the margin means the same on both.
+- **Automatic gain** on what the parents hear: a voice across the room, around -55 dBFS on a phone, is brought to a listenable level without ever clipping a cry.
 - **2 s pre-roll** and **5 s hangover**: the start of a cry is never lost, short pauses do not cut sentences.
 - **Do-not-disturb** enabled automatically, with an in-app switch (no digging through system settings).
 - **Night screen**: black, dimmed to the minimum, stopped only by a long press.
@@ -125,7 +126,7 @@ Android and the browser only plug in what is truly theirs.
 
 ```mermaid
 flowchart BT
-    shared["<b>shared</b><br/>KMP · JVM + Wasm<br/><sub>protocol · pairing · crypto · sound gate · mic health</sub>"]
+    shared["<b>shared</b><br/>KMP · JVM + Wasm<br/><sub>protocol · pairing · crypto · sound gate · noise floor · auto gain · mic health</sub>"]
     server["<b>server</b><br/>JVM · Ktor<br/><sub>relay · routing · web hosting</sub>"]
     client["<b>client</b><br/>KMP · Android + Wasm<br/><sub>sessions · transport · settings · Compose UI</sub>"]
     android["<b>android</b><br/><sub>activity · service · platform</sub>"]
@@ -197,7 +198,9 @@ Hosting the relay yourself (as this project does on a Raspberry Pi) keeps even t
 ```mermaid
 flowchart LR
     MIC["🎙️ Microphone<br/><sub>16 kHz mono PCM16<br/>20 ms frames</sub>"] --> LVL["Level<br/><sub>RMS dBFS</sub>"]
-    LVL --> GATE{"Sound gate<br/><sub>threshold ·<br/>hold-to-listen</sub>"}
+    LVL --> FLOOR["Background<br/><sub>noise floor</sub>"] --> GATE
+    LVL --> GATE{"Sound gate<br/><sub>floor + margin ·<br/>hold-to-listen</sub>"}
+    MIC --> AGC["Auto gain<br/><sub>up to +40 dB</sub>"] --> GATE
     GATE -- quiet --> PRE[("Pre-roll<br/><sub>last 2 s</sub>")]
     GATE -- loud --> ENC["CBOR + AES-GCM"]
     PRE -. flushed on trigger .-> ENC
@@ -210,6 +213,9 @@ flowchart LR
 |---|---|---|
 | Format | 16 kHz · mono · 16-bit · 20 ms frames | Speech and cries fit well under 8 kHz |
 | Pre-roll / hangover | 2 s / 5 s | Never cut the first cry, never chop a sentence |
+| Trigger | 20 dB above the background by default (6–60) | Same meaning on every microphone |
+| Background | median per second, falls at once, rises 1 dB per minute | A long cry never becomes the background |
+| Auto gain | up to +40 dB, instant reduction, ~12 dB/s recovery | Audible voices, unclipped cries, no pumping |
 | Status heartbeat | every 250 ms | Smooth level meter, fast failure detection |
 | Lost-link alarm | 10 s without status | Tolerates a Wi-Fi hiccup, not a dead phone |
 | Hold to listen | keep-alive 500 ms, expires after 1.5 s | Releasing the finger or losing the link closes the gate |
@@ -262,7 +268,7 @@ flowchart LR
 
 ## Quality
 
-- **Shared logic is tested on both runtimes**: the 21 tests of `shared` run on the JVM *and* in WebAssembly — protocol, crypto, pairing links, loudness, sound gate, microphone health.
+- **Shared logic is tested on both runtimes**: the 30 tests of `shared` run on the JVM *and* in WebAssembly — protocol, crypto, pairing links, version compatibility, loudness, sound gate, noise floor, auto gain, microphone health.
 - **Relay integration tests** open real WebSockets: role routing, room isolation, presence, device-aware routing, compressed and cached web bundle.
 - **Static checks** in CI: Android lint, `terraform fmt`/`validate`, `actionlint`, a secret scanner on every PR.
 - **Locked dependencies**: Gradle version catalog, Terraform provider locks for three platforms, Yarn lock for the web toolchain.
@@ -304,7 +310,7 @@ Delivery, deployment and rollback in [`knowledge/delivery.md`](knowledge/deliver
 
 ```
 components/
-├── shared/      Kotlin Multiplatform (JVM + Wasm): protocol, pairing, crypto, sound gate, microphone health
+├── shared/      Kotlin Multiplatform (JVM + Wasm): protocol, pairing, crypto, sound gate, noise floor, auto gain, microphone health
 ├── server/      Ktor relay: rooms, role routing, device-aware entry points, web hosting
 ├── client/      Kotlin Multiplatform (Android + Wasm): sessions, transport, settings, Compose UI
 ├── android/     Android shell: activity, foreground service, platform implementations

@@ -57,6 +57,12 @@ hence the suspending `PeerCodec` / `PairingSecret.roomId()`. The frame format is
 ## Audio
 - 16 kHz mono PCM16, 20 ms frames (~256 kbit/s while transmitting, nothing when quiet).
 - `SoundGate`: 2 s pre-roll (the start of a cry is not lost) + 5 s hangover.
+- Trigger: `NoiseFloor` + margin (20 dB by default). A phone hears a voice at 1 m around -55 dBFS, a computer
+  around -30: an absolute threshold could not suit both. The floor is the median of each second, falls at once
+  and rises 1 dB per minute so a long cry never becomes the background. Parents drag an absolute handle; the
+  child turns it into a margin (`SetThreshold` and the status stay absolute).
+- `AutoGain` on the sent stream only (detection and meters keep the raw level): up to +40 dB, reduced at once on
+  a louder frame so nothing clips, recovering ~12 dB/s.
 - Status every 250 ms (peak level, threshold, battery, do-not-disturb), even when quiet → heartbeat.
 - CBOR decoding ignores unknown fields, so newer apps can add status fields without breaking older ones.
 - **Hold to listen**: the receiver sends `ForceListen` every 500 ms while pressed;
