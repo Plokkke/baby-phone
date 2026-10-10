@@ -33,7 +33,7 @@ class AppContainer(private val platform: Platform) {
         val link = peerLink(current.secret, current.deviceId, role)
         return when (role) {
             Role.EMITTER -> EmitterSession(
-                link, settings, platform.microphone, platform.speaker, platform.battery, platform.quietMode, current.thresholdDb,
+                link, settings, platform.microphone, platform.speaker, platform.battery, platform.quietMode, current.marginDb,
             )
             Role.RECEIVER -> ReceiverSession(link, platform.microphone, platform.speaker, platform.alarm(), platform.soundOutput)
             Role.IDLE -> error("Idle devices do not monitor")

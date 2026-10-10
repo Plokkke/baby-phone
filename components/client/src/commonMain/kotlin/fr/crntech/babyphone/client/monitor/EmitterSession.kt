@@ -7,8 +7,10 @@ import fr.crntech.babyphone.client.platform.MicMode
 import fr.crntech.babyphone.client.platform.Microphone
 import fr.crntech.babyphone.client.platform.QuietMode
 import fr.crntech.babyphone.client.platform.Speaker
+import fr.crntech.babyphone.shared.AutoGain
 import fr.crntech.babyphone.shared.Loudness
 import fr.crntech.babyphone.shared.MicrophoneHealth
+import fr.crntech.babyphone.shared.NoiseFloor
 import fr.crntech.babyphone.shared.PeerMessage
 import fr.crntech.babyphone.shared.Role
 import fr.crntech.babyphone.shared.SoundGate
@@ -44,20 +46,23 @@ class EmitterSession(
     private val speaker: () -> Speaker,
     private val battery: Battery,
     private val quietMode: QuietMode,
-    thresholdDb: Float,
+    marginDb: Float,
 ) : MonitorSession {
 
     data class State(
         val connected: Boolean = false,
         val receivers: Int = 0,
         val levelDb: Float = Loudness.FLOOR_DB,
-        val thresholdDb: Float = Threshold.DEFAULT_DB,
+        /** Absolute, for the level bars: the room's background plus the margin the parents chose. */
+        val thresholdDb: Float = Loudness.FLOOR_DB + Threshold.DEFAULT_MARGIN_DB,
         val transmitting: Boolean = false,
         val parentTalking: Boolean = false,
         val microphone: MicrophoneHealth.Status = MicrophoneHealth.Status.STARTING,
     )
 
-    private val _state = MutableStateFlow(State(thresholdDb = thresholdDb))
+    @Volatile private var marginDb = marginDb
+    private val noiseFloor = NoiseFloor()
+    private val _state = MutableStateFlow(State(thresholdDb = thresholdDb()))
     val state = _state.asStateFlow()
     val quiet = quietMode.state
     override val presence = link.presence
@@ -114,14 +119,19 @@ class EmitterSession(
     @OptIn(ExperimentalCoroutinesApi::class)
     private suspend fun capture() {
         val gate = SoundGate()
+        val gain = AutoGain()
         parentTalking.flatMapLatest { talking ->
             microphone.frames(if (talking) MicMode.VOICE else MicMode.AMBIENT).map { it to talking }
         }.collect { (frame, talking) ->
             val level = Loudness.dbfs(frame)
             peakDb = maxOf(peakDb, level)
-            if (!talking) microphoneHealth.onFrame(level)
-            val triggered = talking || forcedUntil.hasNotPassedNow() || level >= _state.value.thresholdDb
-            gate.process(frame, triggered).forEach { link.send(PeerMessage.Audio(it)) }
+            if (!talking) {
+                microphoneHealth.onFrame(level)
+                noiseFloor.onFrame(level)
+            }
+            val triggered = talking || forcedUntil.hasNotPassedNow() || level >= thresholdDb()
+            // Detection reads the raw level; the parents get it amplified, or they would barely hear a voice.
+            gate.process(gain.process(frame), triggered).forEach { link.send(PeerMessage.Audio(it)) }
             _state.update { it.copy(transmitting = gate.isOpen) }
         }
     }
@@ -134,9 +144,9 @@ class EmitterSession(
                     speakers.play(from, message.pcm)
                 }
                 is PeerMessage.SetThreshold -> {
-                    val db = message.db.coerceIn(Threshold.MIN_DB, Threshold.MAX_DB)
-                    _state.update { it.copy(thresholdDb = db) }
-                    settings.setThreshold(db)
+                    marginDb = (message.db - background()).coerceIn(Threshold.MIN_MARGIN_DB, Threshold.MAX_MARGIN_DB)
+                    settings.setMargin(marginDb)
+                    _state.update { it.copy(thresholdDb = thresholdDb()) }
                 }
                 PeerMessage.ForceListen -> forcedUntil = clock.markNow() + Timing.FORCE_LISTEN_TTL
                 is PeerMessage.EmitterStatus, is PeerMessage.Intercom, PeerMessage.Leaving -> Unit
@@ -158,13 +168,18 @@ class EmitterSession(
             delay(Timing.STATUS_INTERVAL)
             val level = peakDb.also { peakDb = Loudness.FLOOR_DB }
             val current = _state.updateAndGet {
-                it.copy(levelDb = level, parentTalking = parentTalking.value, microphone = microphoneHealth.status())
+                it.copy(levelDb = level, thresholdDb = thresholdDb(), parentTalking = parentTalking.value, microphone = microphoneHealth.status())
             }
             val power = battery.read()
             val quiet = quietMode.state.value.takeIf { it.supported }?.enabled
             link.send(PeerMessage.EmitterStatus(power.percent, power.charging, level, current.thresholdDb, current.transmitting, quiet))
         }
     }
+
+    private fun background() = noiseFloor.db ?: Loudness.FLOOR_DB
+
+    /** Parents set the threshold where they see it on the bar; the device keeps it as a margin above the background. */
+    private fun thresholdDb() = (background() + marginDb).coerceIn(Threshold.MIN_DB, Threshold.MAX_DB)
 
     private companion object {
         /** Bridges network jitter between voice frames, so the microphone is not switched back and forth. */
